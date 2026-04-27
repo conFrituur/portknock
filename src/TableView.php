@@ -37,7 +37,7 @@ class TableView
 
     private function getWhitelist(): array
     {
-        $whitelistFile = file_get_contents('whitelist.json');
+        $whitelistFile = $this->getUtils()->getOrCreateFile('whitelist.json');
         $whitelist = json_decode($whitelistFile, true, flags: JSON_THROW_ON_ERROR);
 
         if (!is_array($whitelist)) {

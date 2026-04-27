@@ -10,7 +10,11 @@ class KnockUtils
     public function getOrCreateFile(string $filename): string
     {
         if (file_exists($filename)) {
-            return file_get_contents($filename);
+            $content = file_get_contents($filename);
+            if ($content === false) {
+                $this->die(500);
+            }
+            return strval($content);
         }
         file_put_contents($filename, '');
         $this->addLogEntry("created file {$filename}");

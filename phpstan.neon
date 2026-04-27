@@ -1,0 +1,14 @@
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+parameters:
+    bootstrapFiles:
+        - .phpstan/bootstrap.php
+    level: 8
+    paths:
+        - src
+    scanFiles: []
+    excludePaths: []
+    checkMissingIterableValueType: false
+    ignoreErrors:
+

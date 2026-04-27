@@ -4,8 +4,8 @@ namespace Portknock\Util;
 
 class KnockUtils
 {
-    CONST string FILE_HISTORY = "../../data/history.log";
-    CONST string FILE_WHITELIST = "../../data/whitelist.json";
+    const string FILE_HISTORY = "../../data/history.log";
+    const string FILE_WHITELIST = "../../data/whitelist.json";
 
     public function getOrCreateFile(string $filename): string
     {

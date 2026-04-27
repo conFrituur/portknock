@@ -26,7 +26,7 @@ class Knock
     private function getAuthorizedUserFromHeaders(array $headers, string $ip): string
     {
         $authorized = [
-            'test' => 'test'
+            'test' => 'test',
         ];
 
         $sesamHeader = $headers['HTTP_X_SESAM'] ?? 'UNSET';

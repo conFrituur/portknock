@@ -2,8 +2,6 @@
 
 namespace Portknock;
 
-class Monitoring
-{
-}
+class Monitoring {}
 
 (new Monitoring());

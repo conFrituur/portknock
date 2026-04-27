@@ -1,4 +1,5 @@
 .idea
+vendor
 data/history.log
 data/whitelist.json
 data/config.json

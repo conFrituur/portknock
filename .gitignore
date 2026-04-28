@@ -1,5 +1,6 @@
 .idea
 .phpunit.cache
+.php-cs-fixer.cache
 vendor
 data/history.log
 data/whitelist.json

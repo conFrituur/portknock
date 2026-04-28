@@ -26,13 +26,13 @@ class KnockUtils
         file_put_contents("{$filename}", $contents);
     }
 
-    public function isValidateIPv4(string $ip): bool
+    public function isValidIPv4(string $ip): bool
     {
         $opts = FILTER_FLAG_IPV4 | FILTER_FLAG_NO_RES_RANGE;
         return filter_var($ip, FILTER_VALIDATE_IP, $opts) !== false;
     }
 
-    public function isValidateIPv6(string $ip): bool
+    public function isValidIPv6(string $ip): bool
     {
         $opts = FILTER_FLAG_IPV6 | FILTER_FLAG_NO_RES_RANGE;
         return filter_var($ip, FILTER_VALIDATE_IP, $opts) !== false;

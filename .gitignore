@@ -1,4 +1,5 @@
 .idea
+.phpunit.cache
 vendor
 data/history.log
 data/whitelist.json

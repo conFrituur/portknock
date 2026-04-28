@@ -9,6 +9,6 @@ parameters:
         - src
     scanFiles: []
     excludePaths: []
-    checkMissingIterableValueType: false
     ignoreErrors:
+        - identifier: missingType.iterableValue
 

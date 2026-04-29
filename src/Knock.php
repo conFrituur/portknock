@@ -2,73 +2,105 @@
 
 namespace Portknock;
 
-use JsonException;
-use Portknock\Util\KnockUtils;
+use Portknock\Helper\Log;
+use Portknock\Helper\Util;
+use Portknock\Model\AllowlistEntry;
+use Portknock\Model\HttpHeaders;
+use Portknock\Model\User;
+use Portknock\Model\UserAccess;
+use Portknock\Repository\AllowlistRepository;
+use Portknock\Repository\KeyRepository;
+use Portknock\Repository\UserRepository;
 
 class Knock
 {
-    private KnockUtils $utils;
+    private AllowlistRepository $allowlistRepository;
+    private UserRepository $userRepository;
+    private KeyRepository $keyRepository;
 
-    public function __construct(?KnockUtils $utils = null)
-    {
-        $this->utils = $utils ?? new KnockUtils();
+    public function __construct(
+        ?AllowlistRepository $allowlistRepository = null,
+        ?UserRepository $userRepository = null,
+        ?KeyRepository $keyRepository = null
+    ) {
+        $this->allowlistRepository = $allowlistRepository ?? new AllowlistRepository();
+        $this->userRepository      = $userRepository ?? new UserRepository();
+        $this->keyRepository       = $keyRepository ?? new KeyRepository();
     }
 
     public function knock(array $headers): void
     {
-        $ip   = $this->getRemoteAddressFromHeaders($headers);
+        $headers = new HttpHeaders($headers);
+        $ip = $this->getRemoteAddressFromHeaders($headers);
         $user = $this->getAuthorizedUserFromHeaders($headers, $ip);
-        $this->addIpToWhitelist($user, $ip);
+        $allowlistEntry = AllowlistEntry::create($user, $ip);
+        $this->upsertEntry($allowlistEntry);
     }
 
-    private function getAuthorizedUserFromHeaders(array $headers, string $ip): string
+    private function getAuthorizedUserFromHeaders(HttpHeaders $headers, string $remoteIp): User
     {
-        $authorized = [
-            'SesamOpenU' => 'Test',
-        ];
+        $sesamCode = $headers->getSesamHeader();
 
-        $sesamHeader = $headers['HTTP_X_SESAM'] ?? 'UNSET';
-
-        if (!array_key_exists($sesamHeader, $authorized)) {
-            $truncatedSesam = strlen($sesamHeader) > 100 ? substr($sesamHeader, 0, 100) . '...' : $sesamHeader;
-            $this->utils->addLogEntry("{$ip} whitelist request declined, unauthorized user header '{$truncatedSesam}'");
-            $this->utils->die(401);
+        if (!$sesamCode) {
+            Log::warning($remoteIp, "Knock request declined, no sesam header found");
+            Util::die(401);
         }
 
-        return $authorized[$sesamHeader];
+        $authHash = hash_hmac('sha256', $sesamCode, $this->keyRepository->getKey());
+        $user = $this->userRepository->getUserByAuthHash($authHash);
+
+        if (!$user) {
+            // Do not log the whole access code, but just the beginning for debug purposes
+            $truncatedSesam = substr($sesamCode, 0, 5) . '...';
+            Log::warning($remoteIp, "Knock request declined, unknown auth sesamHeader[={$truncatedSesam}]");
+            Util::die(401);
+        }
+
+        if ($user->getUserAccess() !== UserAccess::WRITE_ONLY) {
+            Log::warning($remoteIp, "Knock request declined, user {$user->getName()} does not have write permissions");
+            Util::die(403);
+        }
+
+        Log::debug($remoteIp, "Knock request accepted for user {$user->getName()}");
+        return $user;
     }
 
-    private function getRemoteAddressFromHeaders(array $headers): string
+    private function getRemoteAddressFromHeaders(HttpHeaders $headers): string
     {
-        $remoteIp = $headers['REMOTE_ADDR'] ?? 'not set';
+        $remoteIp = $headers->getRemoteAddr();
 
-        if (!$this->utils->isValidIPv4($remoteIp) && !$this->utils->isValidIPv6($remoteIp)) {
-            $this->utils->die(400);
+        if (!$remoteIp) {
+            Log::error("MissingRemoteAddr", HttpHeaders::REMOTEADDR_HEADER . " header is missing from request");
+        }
+
+        /** @var string $remoteIp */
+        if (!Util::isValidIPv4($remoteIp) && !Util::isValidIPv6($remoteIp)) {
+            Log::error($remoteIp, "Could not find valid IP in header " . HttpHeaders::REMOTEADDR_HEADER . "[={$remoteIp}]");
+            Util::die(400);
         }
 
         return $remoteIp;
     }
 
-    private function addIpToWhitelist(string $user, string $ip): void
+    private function upsertEntry(AllowlistEntry $allowlistEntry): void
     {
-        $whitelistFile = $this->utils->getOrCreateFile(KnockUtils::FILE_WHITELIST);
-        try {
-            $whitelist = json_decode($whitelistFile, true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
-            // This will probably only occur on first run
-            $this->utils->addLogEntry("whitelist.json was malformed or empty, starting anew");
-            $whitelist = [];
-        }
+        $allowlist = $this->allowlistRepository->getList();
 
-        // Check if IP is already whitelisted by this user, don't care for duplicates among other users at this point
-        if (isset($whitelist[$user]) && $whitelist[$user] === $ip) {
-            $this->utils->addLogEntry("{$ip} is already whitelisted for {$user}");
+        // Check if IPs are already allowlisted by this user, don't care for duplicates among other users at this point
+        if ($allowlist->hasEntryInList($allowlistEntry)) {
+            Log::debug(
+                $allowlistEntry->getUserName(),
+                "skipping, {$allowlistEntry->getIpAddressesString()} is already whitelisted"
+            );
             return;
         }
 
-        $whitelist[$user] = $ip;
+        $allowlist->upsertEntry($allowlistEntry);
 
-        $this->utils->save(KnockUtils::FILE_WHITELIST, strval(json_encode($whitelist)));
-        $this->utils->addLogEntry("{$ip} has been added to the whitelist for {$user}");
+        $this->allowlistRepository->save($allowlist);
+        Log::info(
+            $allowlistEntry->getUserName(),
+            "{$allowlistEntry->getIpAddressesString()} has been added to the allowlist"
+        );
     }
 }

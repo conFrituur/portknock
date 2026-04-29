@@ -2,6 +2,7 @@
 .phpunit.cache
 .php-cs-fixer.cache
 vendor
+data/.key
+data/allowlist.json
 data/history.log
-data/whitelist.json
-data/config.json
+data/users.json

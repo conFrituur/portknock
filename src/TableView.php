@@ -2,50 +2,72 @@
 
 namespace Portknock;
 
-use Portknock\Util\KnockUtils;
+use Portknock\Helper\Log;
+use Portknock\Helper\Util;
+use Portknock\Model\HttpHeaders;
+use Portknock\Model\UserAccess;
+use Portknock\Repository\AllowlistRepository;
+use Portknock\Repository\KeyRepository;
+use Portknock\Repository\UserRepository;
 
 class TableView
 {
-    private KnockUtils $utils;
+    private AllowlistRepository $allowlistRepository;
+    private UserRepository $userRepository;
+    private KeyRepository $keyRepository;
 
-    public function getUtils(): KnockUtils
-    {
-        return $this->utils;
+    public function __construct(
+        ?AllowlistRepository $allowlistRepository = null,
+        ?UserRepository $userRepository = null,
+        ?KeyRepository $keyRepository = null
+    ) {
+        $this->allowlistRepository = $allowlistRepository ?? new AllowlistRepository();
+        $this->userRepository      = $userRepository ?? new UserRepository();
+        $this->keyRepository       = $keyRepository ?? new KeyRepository();
     }
 
-    public function __construct(array $headers)
+    public function showList(array $headers): void
     {
-        $this->utils = new KnockUtils();
-
+        $headers = new HttpHeaders($headers);
         $this->checkAuthorizedUserFromHeaders($headers);
-        $whitelist = $this->getWhitelist();
-        echo $this->buildOPNsenseTable($whitelist);
+        $allowedIps = $this->getAllowedIps();
+        echo $this->buildOPNsenseTable($allowedIps);
     }
 
-    private function checkAuthorizedUserFromHeaders(array $headers): void
+    private function checkAuthorizedUserFromHeaders(HttpHeaders $headers): void
     {
-        $authorized = [
-            'test',
-        ];
+        $remoteIp  = $headers->getRemoteAddr() ?? 'Unknown';
+        $sesamCode = $headers->getSesamHeader();
 
-        $sesamHeader = $headers['HTTP_X_SESAM'] ?? 'UNSET';
-
-        if (!in_array($sesamHeader, $authorized)) {
-            $this->getUtils()->die(401);
+        if (!$sesamCode) {
+            Log::warning($remoteIp, "View request declined, no sesam header found");
+            Util::die(401);
         }
+
+        $authHash = hash_hmac('sha256', $sesamCode, $this->keyRepository->getKey());
+        $user     = $this->userRepository->getUserByAuthHash($authHash);
+
+        if (!$user) {
+            // Do not log the whole access code, but just the beginning for debug purposes
+            $truncatedSesam = substr($sesamCode, 0, 5) . '...';
+            Log::warning($remoteIp, "View request declined, unknown auth sesamHeader '$truncatedSesam'");
+            Util::die(401);
+        }
+
+        if ($user->getUserAccess() !== UserAccess::READ_ONLY) {
+            Log::warning($remoteIp, "View request declined, user {$user->getName()} does not have read permissions");
+            Util::die(403);
+        }
+
+        Log::debug($remoteIp, "View request accepted for user {$user->getName()}");
     }
 
-    private function getWhitelist(): array
+    private function getAllowedIps(): array
     {
-        $whitelistFile = $this->getUtils()->getOrCreateFile('whitelist.json');
-        $whitelist = json_decode($whitelistFile, true, flags: JSON_THROW_ON_ERROR);
+        $allowlist = $this->allowlistRepository->getList();
 
-        if (!is_array($whitelist)) {
-            $this->getUtils()->die(500);
-        }
-
-        // Remove any duplicate IP's from whitelist
-        return array_values(array_unique($whitelist));
+        // Remove any duplicate IP's from list
+        return array_unique($allowlist->toArrayOfIps());
     }
 
     /**
@@ -53,13 +75,11 @@ class TableView
      * "The content of the file being fetched should contain one IPv[4|6] address per line,
      * lines that start with a whitespace , colon (,), semicolon (;), pipe (|) or hash (#) will be ignored."
      *
-     * @param array $whitelist
+     * @param array $allowlistData
      * @return string
      */
-    private function buildOPNsenseTable(array $whitelist): string
+    private function buildOPNsenseTable(array $allowlistData): string
     {
-        return implode(PHP_EOL, $whitelist);
+        return implode(PHP_EOL, $allowlistData);
     }
 }
-
-(new TableView($_SERVER));

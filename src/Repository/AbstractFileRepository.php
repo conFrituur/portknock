@@ -3,22 +3,23 @@
 namespace Portknock\Repository;
 
 use Portknock\Helper\Log;
-use Portknock\Helper\Util;
+use Portknock\Helper\FileHandler;
+use RuntimeException;
 
 abstract class AbstractFileRepository
 {
-    private Util $utils;
+    private FileHandler $fileHandler;
 
-    public function __construct(?Util $utils = null)
+    public function __construct(?FileHandler $fileHandler = null)
     {
-        $this->utils = $utils ?? new Util();
+        $this->fileHandler = $fileHandler ?? new FileHandler();
     }
 
     protected function getOrCreateFile(string $filename): string
     {
         $contents = $this->loadFile($filename);
         if ($contents === false) {
-            file_put_contents($filename, '');
+            $this->fileHandler->filePutContents($filename, '');
             Log::notice(__CLASS__, "Created file {$filename}");
             $contents = '';
         }
@@ -27,18 +28,19 @@ abstract class AbstractFileRepository
 
     protected function loadFile(string $filename): string|false
     {
-        if (file_exists($filename)) {
-            $contents = file_get_contents($filename);
+        if ($this->fileHandler->fileExists($filename)) {
+            $contents = $this->fileHandler->fileGetContents($filename);
+
             if ($contents === false) {
-                $this->utils->die(500);
+                throw new RuntimeException("Error reading file {$filename}");
             }
-            return strval($contents);
+            return $contents;
         }
         return false;
     }
 
     protected function saveFile(string $filename, string $contents): void
     {
-        file_put_contents("{$filename}", $contents);
+        $this->fileHandler->filePutContents($filename, $contents);
     }
 }

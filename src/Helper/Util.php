@@ -2,6 +2,8 @@
 
 namespace Portknock\Helper;
 
+use RuntimeException;
+
 class Util
 {
     public static function isValidIPv4(string $ip): bool
@@ -16,9 +18,8 @@ class Util
         return filter_var($ip, FILTER_VALIDATE_IP, $opts) !== false;
     }
 
-    public static function die(int $code): never
+    public static function hash(string $data, string $key): string
     {
-        http_response_code($code);
-        die("{$code} NEIN!");
+        return hash_hmac('sha256', $data, $key);
     }
 }

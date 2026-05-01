@@ -17,6 +17,10 @@ readonly class AllowlistEntry
 
     private function validate(): void
     {
+        if (strlen($this->userName) < 3) {
+            throw new DomainException("Username[={$this->userName}] must be at least 3 characters long");
+        }
+
         if (!$this->ipv4Address && !$this->ipv6Address) {
             throw new DomainException("Must give at least one IPv4 or IPv6 address");
         }
@@ -68,13 +72,13 @@ readonly class AllowlistEntry
         return $contents;
     }
 
-    public static function create(User $user, string $ipAddress): self
+    public static function create(string $userName, string $ipAddress): self
     {
         if (Util::isValidIPv4($ipAddress)) {
-            return new self($user->getName(), $ipAddress, null);
+            return new self($userName, $ipAddress, null);
         }
         if (Util::isValidIPv6($ipAddress)) {
-            return new self($user->getName(), null, $ipAddress);
+            return new self($userName, null, $ipAddress);
         }
 
         throw new DomainException("IpAddress[={$ipAddress}] is neither a valid IPv4 nor IPv6 address");

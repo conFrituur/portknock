@@ -17,14 +17,14 @@ readonly class Allowlist
         return $this->allowlistEntries;
     }
 
-    public static function fromJsonEncodedString(string $encodedEntries): self
+    public static function fromJson(string $encodedEntries): self
     {
         $jsonData = json_decode($encodedEntries, true, flags: JSON_THROW_ON_ERROR);
         $allowlistEntries = AllowlistEntry::fromJsonData($jsonData);
         return new self($allowlistEntries);
     }
 
-    public function toJsonEncodedString(): string
+    public function toJson(): string
     {
         $entries = [];
         foreach ($this->allowlistEntries as $allowlistEntry) {
@@ -52,7 +52,7 @@ readonly class Allowlist
     {
         return array_any(
             $this->getAllowlistEntries(),
-            fn ($allowlistEntry) => $allowlistEntry->equals($allowlistEntryToCheck)
+            fn (AllowlistEntry $allowlistEntry) => $allowlistEntry->equals($allowlistEntryToCheck)
         );
     }
 
@@ -63,7 +63,7 @@ readonly class Allowlist
         $updated = false;
 
         foreach ($allowlistEntries as $key => $allowlistEntry) {
-            if ($allowlistEntry->equals($newEntry)) {
+            if ($allowlistEntry->getUserName() == $newEntry->getUserName()) {
                 $allowlistEntries[$key] = $newEntry;
                 $updated = true;
             }

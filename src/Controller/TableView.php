@@ -1,62 +1,45 @@
 <?php
 
-namespace Portknock;
+namespace Portknock\Controller;
 
 use Portknock\Helper\Log;
 use Portknock\Helper\Util;
 use Portknock\Model\HttpHeaders;
 use Portknock\Model\UserAccess;
-use Portknock\Repository\AllowlistRepository;
-use Portknock\Repository\KeyRepository;
-use Portknock\Repository\UserRepository;
 
-class TableView
+class TableView extends AbstractController
 {
-    private AllowlistRepository $allowlistRepository;
-    private UserRepository $userRepository;
-    private KeyRepository $keyRepository;
-
-    public function __construct(
-        ?AllowlistRepository $allowlistRepository = null,
-        ?UserRepository $userRepository = null,
-        ?KeyRepository $keyRepository = null
-    ) {
-        $this->allowlistRepository = $allowlistRepository ?? new AllowlistRepository();
-        $this->userRepository      = $userRepository ?? new UserRepository();
-        $this->keyRepository       = $keyRepository ?? new KeyRepository();
-    }
-
     public function showList(array $headers): void
     {
         $headers = new HttpHeaders($headers);
         $this->checkAuthorizedUserFromHeaders($headers);
         $allowedIps = $this->getAllowedIps();
-        echo $this->buildOPNsenseTable($allowedIps);
+        $this->exitHandler->echo($this->buildOPNsenseTable($allowedIps));
     }
 
     private function checkAuthorizedUserFromHeaders(HttpHeaders $headers): void
     {
         $remoteIp  = $headers->getRemoteAddr() ?? 'Unknown';
-        $sesamCode = $headers->getSesamHeader();
+        $sesamCode = $headers->getSesam();
 
         if (!$sesamCode) {
             Log::warning($remoteIp, "View request declined, no sesam header found");
-            Util::die(401);
+            $this->exitHandler->die(401);
         }
 
-        $authHash = hash_hmac('sha256', $sesamCode, $this->keyRepository->getKey());
+        $authHash = Util::hash($sesamCode, $this->keyRepository->getKey());
         $user     = $this->userRepository->getUserByAuthHash($authHash);
 
         if (!$user) {
             // Do not log the whole access code, but just the beginning for debug purposes
             $truncatedSesam = substr($sesamCode, 0, 5) . '...';
             Log::warning($remoteIp, "View request declined, unknown auth sesamHeader '$truncatedSesam'");
-            Util::die(401);
+            $this->exitHandler->die(401);
         }
 
         if ($user->getUserAccess() !== UserAccess::READ_ONLY) {
             Log::warning($remoteIp, "View request declined, user {$user->getName()} does not have read permissions");
-            Util::die(403);
+            $this->exitHandler->die(403);
         }
 
         Log::debug($remoteIp, "View request accepted for user {$user->getName()}");

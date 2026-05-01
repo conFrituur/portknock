@@ -6,7 +6,7 @@ use Portknock\Helper\Log;
 
 class KeyRepository extends AbstractFileRepository
 {
-    const string FILE_KEY = "../../data/.key";
+    public const string FILE_KEY = "../../data/.key";
 
     public function getKey(): string
     {

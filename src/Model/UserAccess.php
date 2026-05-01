@@ -2,8 +2,8 @@
 
 namespace Portknock\Model;
 
-enum UserAccess
+enum UserAccess: string
 {
-    case READ_ONLY;
-    case WRITE_ONLY;
+    case READ_ONLY = "READ_ONLY";
+    case WRITE_ONLY = "WRITE_ONLY";
 }

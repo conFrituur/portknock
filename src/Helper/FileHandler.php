@@ -9,7 +9,7 @@ class FileHandler
         return file_get_contents($filename);
     }
 
-    public function filePutContents(string $filename, string $content)
+    public function filePutContents(string $filename, string $content): void
     {
         file_put_contents($filename, $content);
     }

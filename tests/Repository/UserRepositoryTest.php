@@ -12,7 +12,7 @@ class UserRepositoryTest extends AbstractCase
 {
     public function testGetUserByAuthHash(): void
     {
-        $expectedUser = new User(self::TEST_USER_2, self::TEST_HASH_2, UserAccess::READ_ONLY);
+        $expectedUser = new User(self::TEST_USER_2, UserAccess::READ_ONLY);
 
         $mockFileHandler = $this->createMock(FileHandler::class);
         $mockFileHandler->expects($this->once())

@@ -14,7 +14,7 @@ class UserRepository extends AbstractFileRepository
         $userList     = json_decode($userlistJson, true, flags: JSON_THROW_ON_ERROR);
 
         if (array_key_exists($authHash, $userList)) {
-            return User::fromJsonData($authHash, $userList[$authHash]);
+            return User::fromJsonData($userList[$authHash]);
         }
 
         return null;

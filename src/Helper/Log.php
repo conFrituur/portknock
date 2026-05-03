@@ -76,18 +76,4 @@ class Log
             $logger->critical(self::formatMessage($tag, $message), $context);
         }
     }
-
-    public static function alert(string $tag, string $message, array $context = []): void
-    {
-        foreach (self::getLoggers() as $logger) {
-            $logger->alert(self::formatMessage($tag, $message), $context);
-        }
-    }
-
-    public static function emergency(string $tag, string $message, array $context = []): void
-    {
-        foreach (self::getLoggers() as $logger) {
-            $logger->emergency(self::formatMessage($tag, $message), $context);
-        }
-    }
 }

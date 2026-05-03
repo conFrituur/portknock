@@ -27,7 +27,7 @@ class Knock extends AbstractController
 
         if (!$sesamCode) {
             Log::warning($remoteIp, "Knock request declined, no sesam header found");
-            $this->exitHandler->die(401);
+            $this->outputHandler->die(401);
         }
 
         $authHash = Util::hash($sesamCode, $this->keyRepository->getKey());
@@ -37,12 +37,12 @@ class Knock extends AbstractController
             // Do not log the whole access code, but just the beginning for debug purposes
             $truncatedSesam = substr($sesamCode, 0, 5) . '...';
             Log::warning($remoteIp, "Knock request declined, unknown auth sesamHeader[={$truncatedSesam}]");
-            $this->exitHandler->die(401);
+            $this->outputHandler->die(401);
         }
 
         if ($user->getUserAccess() !== UserAccess::WRITE_ONLY) {
             Log::warning($remoteIp, "Knock request declined, user {$user->getName()} does not have write permissions");
-            $this->exitHandler->die(403);
+            $this->outputHandler->die(403);
         }
 
         Log::debug($remoteIp, "Knock request accepted for user {$user->getName()}");
@@ -55,13 +55,13 @@ class Knock extends AbstractController
 
         if (!$remoteIp) {
             Log::error("MissingRemoteAddr", HttpHeaders::HEADER_REMOTE_ADDR . " header is missing from request");
-            $this->exitHandler->die(500);
+            $this->outputHandler->die(500);
         }
 
         /** @var string $remoteIp */
         if (!Util::isValidIPv4($remoteIp) && !Util::isValidIPv6($remoteIp)) {
             Log::error($remoteIp, "invalid IP in header " . HttpHeaders::HEADER_REMOTE_ADDR . "[=$remoteIp]");
-            $this->exitHandler->die(500);
+            $this->outputHandler->die(500);
         }
 
         return $remoteIp;
@@ -73,7 +73,7 @@ class Knock extends AbstractController
 
         // Check if IPs are already allowlisted by this user, don't care for duplicates among other users at this point
         if ($allowlist->hasEntryInList($allowlistEntry)) {
-            Log::debug($allowlistEntry->getUserName(), "skipping, {$allowlistEntry->getIpAddressesString()} is already whitelisted");
+            Log::debug($allowlistEntry->getUserName(), "skipping, {$allowlistEntry->getIpAddressesString()} is already allowlisted");
             return;
         }
 

@@ -11,9 +11,8 @@ class UserTest extends AbstractCase
 {
     public function testFromJsonData(): void
     {
-        $expectedUser = new User(self::TEST_USER, self::TEST_HASH, UserAccess::READ_ONLY);
+        $expectedUser = new User(self::TEST_USER, UserAccess::READ_ONLY);
         $actualUser   = User::fromJsonData(
-            self::TEST_HASH,
             [User::FIELD_NAME => self::TEST_USER, User::FIELD_ACCESS => UserAccess::READ_ONLY->value]
         );
 
@@ -25,7 +24,6 @@ class UserTest extends AbstractCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Not any or all field keys are found in given JsonData, given keys: ["herp"]');
         User::fromJsonData(
-            self::TEST_HASH,
             ['herp' => 'derp']
         );
     }
@@ -35,7 +33,6 @@ class UserTest extends AbstractCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Invalid UserAccess[=Dunno] for user[=Test]');
         User::fromJsonData(
-            self::TEST_HASH,
             [User::FIELD_NAME => self::TEST_USER, User::FIELD_ACCESS => 'Dunno']
         );
     }

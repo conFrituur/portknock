@@ -3,6 +3,7 @@
 namespace Portknock\Tests;
 
 use Monolog\Handler\StreamHandler;
+use Monolog\Handler\TestHandler;
 use Monolog\Level;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
@@ -32,11 +33,20 @@ abstract class AbstractCase extends TestCase
     protected const string TEST_HASH_3 = "97f3986f35ca6b32fa132e9eb87fe94f0d3d0e339b07d20c73c7bfe1e33703aa"; // Code3
     protected const string TEST_KEY = "sleutel";
 
+    protected TestHandler $logHandler;
+
+    protected function setUp(): void
+    {
+        $this->logHandler = new TestHandler();
+        $log              = new Logger(__CLASS__, [$this->logHandler]);
+        Log::setLogger($log);
+    }
+
     protected function debugLog(): void
     {
         $log = new Logger(__CLASS__);
         $log->pushHandler(new StreamHandler('php://stdout', Level::Debug));
-        Log::setLogger($log);
+        Log::addLogger($log);
     }
 
     protected function getRawTestHeaders(): array

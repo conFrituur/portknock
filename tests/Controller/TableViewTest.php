@@ -3,9 +3,7 @@
 namespace Controller;
 
 use Portknock\Controller\TableView;
-use Portknock\Helper\ExitHandler;
-use Portknock\Model\Allowlist;
-use Portknock\Model\AllowlistEntry;
+use Portknock\Helper\OutputHandler;
 use Portknock\Model\HttpHeaders;
 use Portknock\Model\User;
 use Portknock\Model\UserAccess;
@@ -21,15 +19,17 @@ class TableViewTest extends AbstractCase
     private AllowlistRepository $allowlistRepository;
     private UserRepository $userRepository;
     private KeyRepository $keyRepository;
-    private ExitHandler $exitHandler;
+    private OutputHandler $outputHandler;
 
     protected function setUp(): void
     {
         $this->allowlistRepository = $this->createMock(AllowlistRepository::class);
         $this->userRepository      = $this->createMock(UserRepository::class);
         $this->keyRepository       = $this->createMock(KeyRepository::class);
-        $this->exitHandler         = $this->createMock(ExitHandler::class);
-        $this->tableViewController = new TableView($this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->exitHandler);
+        $this->outputHandler       = $this->createMock(OutputHandler::class);
+        $this->tableViewController = new TableView($this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
+
+        parent::setUp();
     }
 
     public function testShowList()
@@ -43,7 +43,7 @@ class TableViewTest extends AbstractCase
         EOD;
 
         $headers   = $this->getRawTestHeaders();
-        $user      = new User(self::TEST_USER, self::TEST_HASH, UserAccess::READ_ONLY);
+        $user      = new User(self::TEST_USER, UserAccess::READ_ONLY);
         $allowList = $this->getTestAllowlist();
 
         // getAuthorizedUserFromHeaders
@@ -62,10 +62,68 @@ class TableViewTest extends AbstractCase
             ->willReturn($allowList);
 
         // output
-        $this->exitHandler->expects($this->once())
+        $this->outputHandler->expects($this->once())
             ->method('echo')
             ->with($expectedOutput);
 
+        $this->tableViewController->showList($headers);
+    }
+    public function testMissingSesamHeader()
+    {
+        $headers = $this->getRawTestHeaders();
+        unset($headers[HttpHeaders::HEADER_SESAM]);
+
+        $this->outputHandler->expects($this->once())
+            ->method('die')
+            ->with(401)
+            ->willThrowException(new MockException());
+
+        $this->expectException(MockException::class);
+        $this->tableViewController->showList($headers);
+    }
+
+    public function testNoUserMatchForSesamHeader()
+    {
+        $headers                            = $this->getRawTestHeaders();
+        $headers[HttpHeaders::HEADER_SESAM] = 'La-Di-Da-Di';
+
+        $this->keyRepository->expects($this->once())
+            ->method('getKey')
+            ->willReturn(self::TEST_KEY);
+
+        $this->userRepository->expects($this->once())
+            ->method('getUserByAuthHash')
+            ->willReturn(null);
+
+        $this->outputHandler->expects($this->once())
+            ->method('die')
+            ->with(401)
+            ->willThrowException(new MockException());
+
+        $this->expectException(MockException::class);
+        $this->tableViewController->showList($headers);
+    }
+
+    public function testUserIncorrectPermissions()
+    {
+        $user    = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
+        $headers = $this->getRawTestHeaders();
+
+        $this->keyRepository->expects($this->once())
+            ->method('getKey')
+            ->willReturn(self::TEST_KEY);
+
+        $this->userRepository->expects($this->once())
+            ->method('getUserByAuthHash')
+            ->with(self::TEST_HASH)
+            ->willReturn($user);
+
+        $this->outputHandler->expects($this->once())
+            ->method('die')
+            ->with(403)
+            ->willThrowException(new MockException());
+
+        $this->expectException(MockException::class);
         $this->tableViewController->showList($headers);
     }
 }

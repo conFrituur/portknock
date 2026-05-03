@@ -2,7 +2,7 @@
 
 namespace Portknock\Helper;
 
-class ExitHandler
+class OutputHandler
 {
     public function die(int $code): never
     {

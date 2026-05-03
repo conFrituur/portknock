@@ -3,7 +3,7 @@
 namespace Portknock\Tests\Controller;
 
 use Portknock\Controller\Knock;
-use Portknock\Helper\ExitHandler;
+use Portknock\Helper\OutputHandler;
 use Portknock\Model\Allowlist;
 use Portknock\Model\AllowlistEntry;
 use Portknock\Model\HttpHeaders;
@@ -21,21 +21,23 @@ class KnockTest extends AbstractCase
     private AllowlistRepository $allowlistRepository;
     private UserRepository $userRepository;
     private KeyRepository $keyRepository;
-    private ExitHandler $exitHandler;
+    private OutputHandler $outputHandler;
 
     protected function setUp(): void
     {
         $this->allowlistRepository = $this->createMock(AllowlistRepository::class);
         $this->userRepository      = $this->createMock(UserRepository::class);
         $this->keyRepository       = $this->createMock(KeyRepository::class);
-        $this->exitHandler         = $this->createMock(ExitHandler::class);
-        $this->knockController     = new Knock($this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->exitHandler);
+        $this->outputHandler       = $this->createMock(OutputHandler::class);
+        $this->knockController     = new Knock($this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
+
+        parent::setUp();
     }
 
     public function testSuccessfulKnock()
     {
-        $headers = $this->getRawTestHeaders();
-        $user              = new User(self::TEST_USER, self::TEST_HASH, UserAccess::WRITE_ONLY);
+        $headers           = $this->getRawTestHeaders();
+        $user              = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
         $emptyAllowList    = new Allowlist([]);
         $expectedAllowList = new Allowlist([
             new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR),
@@ -68,8 +70,8 @@ class KnockTest extends AbstractCase
 
     public function testSuccessfulKnockAlreadyAllowlisted()
     {
-        $headers = $this->getRawTestHeaders();
-        $user      = new User(self::TEST_USER, self::TEST_HASH, UserAccess::WRITE_ONLY);
+        $headers   = $this->getRawTestHeaders();
+        $user      = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
         $allowList = new Allowlist([
             new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR),
         ]);
@@ -91,6 +93,7 @@ class KnockTest extends AbstractCase
             ->method('save');
 
         $this->knockController->knock($headers);
+        self::assertTrue($this->logHandler->hasDebugThatContains("already allowlisted"));
     }
 
     public function testMissingRemoteAddr()
@@ -98,7 +101,7 @@ class KnockTest extends AbstractCase
         $headers = $this->getRawTestHeaders();
         unset($headers[HttpHeaders::HEADER_REMOTE_ADDR]);
 
-        $this->exitHandler->expects($this->once())
+        $this->outputHandler->expects($this->once())
             ->method('die')
             ->with(500)
             ->willThrowException(new MockException());
@@ -112,7 +115,7 @@ class KnockTest extends AbstractCase
         $headers                                  = $this->getRawTestHeaders();
         $headers[HttpHeaders::HEADER_REMOTE_ADDR] = 'La-Di-Da-Di';
 
-        $this->exitHandler->expects($this->once())
+        $this->outputHandler->expects($this->once())
             ->method('die')
             ->with(500)
             ->willThrowException(new MockException());
@@ -126,7 +129,7 @@ class KnockTest extends AbstractCase
         $headers = $this->getRawTestHeaders();
         unset($headers[HttpHeaders::HEADER_SESAM]);
 
-        $this->exitHandler->expects($this->once())
+        $this->outputHandler->expects($this->once())
             ->method('die')
             ->with(401)
             ->willThrowException(new MockException());
@@ -148,7 +151,7 @@ class KnockTest extends AbstractCase
             ->method('getUserByAuthHash')
             ->willReturn(null);
 
-        $this->exitHandler->expects($this->once())
+        $this->outputHandler->expects($this->once())
             ->method('die')
             ->with(401)
             ->willThrowException(new MockException());
@@ -159,7 +162,7 @@ class KnockTest extends AbstractCase
 
     public function testUserIncorrectPermissions()
     {
-        $user    = new User(self::TEST_USER, self::TEST_HASH, UserAccess::READ_ONLY);
+        $user    = new User(self::TEST_USER, UserAccess::READ_ONLY);
         $headers = $this->getRawTestHeaders();
 
         $this->keyRepository->expects($this->once())
@@ -171,7 +174,7 @@ class KnockTest extends AbstractCase
             ->with(self::TEST_HASH)
             ->willReturn($user);
 
-        $this->exitHandler->expects($this->once())
+        $this->outputHandler->expects($this->once())
             ->method('die')
             ->with(403)
             ->willThrowException(new MockException());
@@ -179,5 +182,4 @@ class KnockTest extends AbstractCase
         $this->expectException(MockException::class);
         $this->knockController->knock($headers);
     }
-
 }

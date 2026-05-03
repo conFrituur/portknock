@@ -14,7 +14,7 @@ class TableView extends AbstractController
         $headers = new HttpHeaders($headers);
         $this->checkAuthorizedUserFromHeaders($headers);
         $allowedIps = $this->getAllowedIps();
-        $this->exitHandler->echo($this->buildOPNsenseTable($allowedIps));
+        $this->outputHandler->echo($this->buildOPNsenseTable($allowedIps));
     }
 
     private function checkAuthorizedUserFromHeaders(HttpHeaders $headers): void
@@ -24,7 +24,7 @@ class TableView extends AbstractController
 
         if (!$sesamCode) {
             Log::warning($remoteIp, "View request declined, no sesam header found");
-            $this->exitHandler->die(401);
+            $this->outputHandler->die(401);
         }
 
         $authHash = Util::hash($sesamCode, $this->keyRepository->getKey());
@@ -34,12 +34,12 @@ class TableView extends AbstractController
             // Do not log the whole access code, but just the beginning for debug purposes
             $truncatedSesam = substr($sesamCode, 0, 5) . '...';
             Log::warning($remoteIp, "View request declined, unknown auth sesamHeader '$truncatedSesam'");
-            $this->exitHandler->die(401);
+            $this->outputHandler->die(401);
         }
 
         if ($user->getUserAccess() !== UserAccess::READ_ONLY) {
             Log::warning($remoteIp, "View request declined, user {$user->getName()} does not have read permissions");
-            $this->exitHandler->die(403);
+            $this->outputHandler->die(403);
         }
 
         Log::debug($remoteIp, "View request accepted for user {$user->getName()}");

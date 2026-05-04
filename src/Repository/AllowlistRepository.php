@@ -18,7 +18,7 @@ class AllowlistRepository extends AbstractFileRepository
             $allowlist = Allowlist::fromJson($allowlistEncoded);
         } catch (Exception) {
             // This will probably only occur on first run
-            Log::notice("getList", "allowlist.json was malformed or empty, starting anew");
+            Log::notice("data/allowlist.json was malformed or empty, starting anew");
             $allowlist = new Allowlist([]);
         }
 

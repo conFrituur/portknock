@@ -2,6 +2,7 @@
 
 namespace Portknock\Tests;
 
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\TestHandler;
 use Monolog\Level;
@@ -40,6 +41,7 @@ abstract class AbstractCase extends TestCase
         $this->logHandler = new TestHandler();
         $log              = new Logger(__CLASS__, [$this->logHandler]);
         Log::setLogger($log);
+        Log::setPersistentContext([]); // clear context from potential earlier tests
     }
 
     protected function debugLog(): void

@@ -11,6 +11,8 @@ class Log
      */
     private static array $loggers = [];
 
+    private static array $persistentContext = [];
+
     public static function setLogger(LoggerInterface $logger): void
     {
         self::$loggers = [$logger];
@@ -29,51 +31,60 @@ class Log
         return self::$loggers;
     }
 
-    private static function formatMessage(string $tag, string $message): string
+    public static function setPersistentContext(array $persistentContext): void
     {
-        $tag = substr($tag, 0, 50);
-        return "[{$tag}] {$message}";
+        self::$persistentContext = $persistentContext;
     }
 
-    public static function debug(string $tag, string $message, array $context = []): void
+    public static function addPersistentContext(array $requestContext): void
+    {
+        self::$persistentContext = array_merge(self::$persistentContext, $requestContext);
+    }
+
+    public static function finalizeContext(array $context): array
+    {
+        return array_merge(self::$persistentContext, $context);
+    }
+
+    public static function debug(string $message, array $context = []): void
     {
         foreach (self::getLoggers() as $logger) {
-            $logger->debug(self::formatMessage($tag, $message), $context);
+            $logger->debug($message, self::finalizeContext($context));
         }
     }
 
-    public static function info(string $tag, string $message, array $context = []): void
+    public static function info(string $message, array $context = []): void
     {
         foreach (self::getLoggers() as $logger) {
-            $logger->info(self::formatMessage($tag, $message), $context);
+            $logger->info($message, self::finalizeContext($context));
         }
     }
 
-    public static function notice(string $tag, string $message, array $context = []): void
+    public static function notice(string $message, array $context = []): void
     {
         foreach (self::getLoggers() as $logger) {
-            $logger->notice(self::formatMessage($tag, $message), $context);
+            $logger->notice($message, self::finalizeContext($context));
         }
     }
 
-    public static function warning(string $tag, string $message, array $context = []): void
+    public static function warning(string $message, array $context = []): void
     {
         foreach (self::getLoggers() as $logger) {
-            $logger->warning(self::formatMessage($tag, $message), $context);
+            $logger->warning($message, self::finalizeContext($context));
         }
     }
 
-    public static function error(string $tag, string $message, array $context = []): void
+    public static function error(string $message, array $context = []): void
     {
         foreach (self::getLoggers() as $logger) {
-            $logger->error(self::formatMessage($tag, $message), $context);
+            $logger->error($message, self::finalizeContext($context));
         }
     }
 
-    public static function critical(string $tag, string $message, array $context = []): void
+    public static function critical(string $message, array $context = []): void
     {
         foreach (self::getLoggers() as $logger) {
-            $logger->critical(self::formatMessage($tag, $message), $context);
+            $logger->critical($message, self::finalizeContext($context));
         }
     }
 }

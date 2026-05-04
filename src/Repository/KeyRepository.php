@@ -15,7 +15,7 @@ class KeyRepository extends AbstractFileRepository
         if (!$key) {
             $key = bin2hex(random_bytes(32));
             $this->saveFile(self::FILE_KEY, $key);
-            Log::info("AuthHashKey", "New key generated and saved to .key file");
+            Log::info("New key generated and saved to data/.key file");
         }
 
         return $key;

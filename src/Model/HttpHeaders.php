@@ -18,4 +18,9 @@ readonly class HttpHeaders
     {
         return $this->headers[self::HEADER_SESAM] ?? null;
     }
+
+    public function getAll(): array
+    {
+        return $this->headers;
+    }
 }

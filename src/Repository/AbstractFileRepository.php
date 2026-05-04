@@ -20,7 +20,7 @@ abstract class AbstractFileRepository
         $contents = $this->loadFile($filename);
         if ($contents === false) {
             $this->fileHandler->filePutContents($filename, '');
-            Log::notice(__CLASS__, "Created file {$filename}");
+            Log::notice("Created file $filename");
             $contents = '';
         }
         return $contents;

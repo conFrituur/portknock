@@ -17,7 +17,7 @@ $uri = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 $headers = $_SERVER;
 
 $logger = new Logger("PortKnockLog");
-$logger->pushHandler(new StreamHandler(__DIR__.'../data/history.log', Level::Debug));
+$logger->pushHandler(new StreamHandler(__DIR__.'/../data/history.log', Level::Debug));
 Log::setLogger($logger);
 
 switch ($uri) {

@@ -2,41 +2,18 @@
 
 namespace Portknock\Tests\Controller;
 
-use Portknock\Controller\Knock;
-use Portknock\Helper\OutputHandler;
+use Portknock\Controller\Knock as KnockController;
 use Portknock\Model\Allowlist;
 use Portknock\Model\AllowlistEntry;
 use Portknock\Model\HttpHeaders;
 use Portknock\Model\User;
 use Portknock\Model\UserAccess;
-use Portknock\Repository\AllowlistRepository;
-use Portknock\Repository\KeyRepository;
-use Portknock\Repository\UserRepository;
-use Portknock\Tests\AbstractCase;
 use Portknock\Tests\Mock\MockException;
 
-class KnockTest extends AbstractCase
+class KnockTest extends AbstractControllerTest
 {
-    private Knock $knockController;
-    private AllowlistRepository $allowlistRepository;
-    private UserRepository $userRepository;
-    private KeyRepository $keyRepository;
-    private OutputHandler $outputHandler;
-
-    protected function setUp(): void
-    {
-        $this->allowlistRepository = $this->createMock(AllowlistRepository::class);
-        $this->userRepository      = $this->createMock(UserRepository::class);
-        $this->keyRepository       = $this->createMock(KeyRepository::class);
-        $this->outputHandler       = $this->createMock(OutputHandler::class);
-        $this->knockController     = new Knock($this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
-
-        parent::setUp();
-    }
-
     public function testSuccessfulKnock()
     {
-        $headers           = $this->getRawTestHeaders();
         $user              = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
         $emptyAllowList    = new Allowlist([]);
         $expectedAllowList = new Allowlist([
@@ -65,12 +42,11 @@ class KnockTest extends AbstractCase
             ->method('save')
             ->with($expectedAllowList);
 
-        $this->knockController->knock($headers);
+        $this->getKnockController()->knock();
     }
 
     public function testSuccessfulKnockAlreadyAllowlisted()
     {
-        $headers   = $this->getRawTestHeaders();
         $user      = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
         $allowList = new Allowlist([
             new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR),
@@ -92,94 +68,31 @@ class KnockTest extends AbstractCase
         $this->allowlistRepository->expects($this->never())
             ->method('save');
 
-        $this->knockController->knock($headers);
+        $this->getKnockController()->knock();
         self::assertTrue($this->logHandler->hasDebugThatContains("already allowlisted"));
-    }
-
-    public function testMissingRemoteAddr()
-    {
-        $headers = $this->getRawTestHeaders();
-        unset($headers[HttpHeaders::HEADER_REMOTE_ADDR]);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(500)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->knockController->knock($headers);
-    }
-
-    public function testInvalidRemoteAddr()
-    {
-        $headers                                  = $this->getRawTestHeaders();
-        $headers[HttpHeaders::HEADER_REMOTE_ADDR] = 'La-Di-Da-Di';
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(500)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->knockController->knock($headers);
     }
 
     public function testMissingSesamHeader()
     {
-        $headers = $this->getRawTestHeaders();
-        unset($headers[HttpHeaders::HEADER_SESAM]);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(401)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->knockController->knock($headers);
+        $this->prepMissingSesamHeader();
+        $this->getKnockController()->knock();
     }
 
     public function testNoUserMatchForSesamHeader()
     {
-        $headers                            = $this->getRawTestHeaders();
-        $headers[HttpHeaders::HEADER_SESAM] = 'La-Di-Da-Di';
-
-        $this->keyRepository->expects($this->once())
-            ->method('getKey')
-            ->willReturn(self::TEST_KEY);
-
-        $this->userRepository->expects($this->once())
-            ->method('getUserByAuthHash')
-            ->willReturn(null);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(401)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->knockController->knock($headers);
+        $this->prepNoUserMatchForSesamHeader();
+        $this->getKnockController()->knock();
     }
 
     public function testUserIncorrectPermissions()
     {
         $user    = new User(self::TEST_USER, UserAccess::READ_ONLY);
-        $headers = $this->getRawTestHeaders();
+        $this->prepUserIncorrectPermissions($user);
+        $this->getKnockController()->knock();
+    }
 
-        $this->keyRepository->expects($this->once())
-            ->method('getKey')
-            ->willReturn(self::TEST_KEY);
-
-        $this->userRepository->expects($this->once())
-            ->method('getUserByAuthHash')
-            ->with(self::TEST_HASH)
-            ->willReturn($user);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(403)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->knockController->knock($headers);
+    private function getKnockController(): KnockController
+    {
+        return new KnockController($this->headers, $this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
     }
 }

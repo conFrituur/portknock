@@ -4,26 +4,23 @@ namespace Portknock\Controller;
 
 use Portknock\Helper\Log;
 use Portknock\Helper\Util;
-use Portknock\Model\HttpHeaders;
 use Portknock\Model\UserAccess;
 
 class TableView extends AbstractController
 {
-    public function showList(array $headers): void
+    public function showList(): void
     {
-        $headers = new HttpHeaders($headers);
-        $this->checkAuthorizedUserFromHeaders($headers);
+        $this->checkAuthorizedUserFromHeaders();
         $allowedIps = $this->getAllowedIps();
         $this->outputHandler->echo($this->buildOPNsenseTable($allowedIps));
     }
 
-    private function checkAuthorizedUserFromHeaders(HttpHeaders $headers): void
+    private function checkAuthorizedUserFromHeaders(): void
     {
-        $remoteIp  = $headers->getRemoteAddr() ?? 'Unknown';
-        $sesamCode = $headers->getSesam();
+        $sesamCode = $this->httpHeaders->getSesam();
 
         if (!$sesamCode) {
-            Log::warning($remoteIp, "View request declined, no sesam header found");
+            Log::warning("view request declined, no sesam header found");
             $this->outputHandler->die(401);
         }
 
@@ -33,16 +30,18 @@ class TableView extends AbstractController
         if (!$user) {
             // Do not log the whole access code, but just the beginning for debug purposes
             $truncatedSesam = substr($sesamCode, 0, 5) . '...';
-            Log::warning($remoteIp, "View request declined, unknown auth sesamHeader '$truncatedSesam'");
+            Log::warning("view request declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
             $this->outputHandler->die(401);
         }
 
+        Log::addPersistentContext(['username' => $user->getName()]);
+
         if ($user->getUserAccess() !== UserAccess::READ_ONLY) {
-            Log::warning($remoteIp, "View request declined, user {$user->getName()} does not have read permissions");
+            Log::warning("view request declined, user does not have read permissions");
             $this->outputHandler->die(403);
         }
 
-        Log::debug($remoteIp, "View request accepted for user {$user->getName()}");
+        Log::debug("view request accepted");
     }
 
     private function getAllowedIps(): array

@@ -5,28 +5,24 @@ namespace Portknock\Controller;
 use Portknock\Helper\Log;
 use Portknock\Helper\Util;
 use Portknock\Model\AllowlistEntry;
-use Portknock\Model\HttpHeaders;
 use Portknock\Model\User;
 use Portknock\Model\UserAccess;
 
 class Knock extends AbstractController
 {
-
-    public function knock(array $headers): void
+    public function knock(): void
     {
-        $headers        = new HttpHeaders($headers);
-        $ip             = $this->getRemoteAddressFromHeaders($headers);
-        $user           = $this->getAuthorizedUserFromHeaders($headers, $ip);
-        $allowlistEntry = AllowlistEntry::create($user->getName(), $ip);
+        $user           = $this->getAuthorizedUserFromHeaders();
+        $allowlistEntry = AllowlistEntry::create($user->getName(), $this->remoteAddr);
         $this->upsertEntryToAllowlist($allowlistEntry);
     }
 
-    private function getAuthorizedUserFromHeaders(HttpHeaders $headers, string $remoteIp): User
+    private function getAuthorizedUserFromHeaders(): User
     {
-        $sesamCode = $headers->getSesam();
+        $sesamCode = $this->httpHeaders->getSesam();
 
         if (!$sesamCode) {
-            Log::warning($remoteIp, "Knock request declined, no sesam header found");
+            Log::warning("knock request declined, no sesam header found");
             $this->outputHandler->die(401);
         }
 
@@ -36,35 +32,19 @@ class Knock extends AbstractController
         if (!$user) {
             // Do not log the whole access code, but just the beginning for debug purposes
             $truncatedSesam = substr($sesamCode, 0, 5) . '...';
-            Log::warning($remoteIp, "Knock request declined, unknown auth sesamHeader[={$truncatedSesam}]");
+            Log::warning("knock request declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
             $this->outputHandler->die(401);
         }
 
+        Log::addPersistentContext(['username' => $user->getName()]);
+
         if ($user->getUserAccess() !== UserAccess::WRITE_ONLY) {
-            Log::warning($remoteIp, "Knock request declined, user {$user->getName()} does not have write permissions");
+            Log::warning("knock request declined, user does not have read permissions");
             $this->outputHandler->die(403);
         }
 
-        Log::debug($remoteIp, "Knock request accepted for user {$user->getName()}");
+        Log::debug("knock request accepted");
         return $user;
-    }
-
-    private function getRemoteAddressFromHeaders(HttpHeaders $headers): string
-    {
-        $remoteIp = $headers->getRemoteAddr();
-
-        if (!$remoteIp) {
-            Log::error("MissingRemoteAddr", HttpHeaders::HEADER_REMOTE_ADDR . " header is missing from request");
-            $this->outputHandler->die(500);
-        }
-
-        /** @var string $remoteIp */
-        if (!Util::isValidIPv4($remoteIp) && !Util::isValidIPv6($remoteIp)) {
-            Log::error($remoteIp, "invalid IP in header " . HttpHeaders::HEADER_REMOTE_ADDR . "[=$remoteIp]");
-            $this->outputHandler->die(500);
-        }
-
-        return $remoteIp;
     }
 
     private function upsertEntryToAllowlist(AllowlistEntry $allowlistEntry): void
@@ -73,13 +53,13 @@ class Knock extends AbstractController
 
         // Check if IPs are already allowlisted by this user, don't care for duplicates among other users at this point
         if ($allowlist->hasEntryInList($allowlistEntry)) {
-            Log::debug($allowlistEntry->getUserName(), "skipping, {$allowlistEntry->getIpAddressesString()} is already allowlisted");
+            Log::debug("skipping, {$allowlistEntry->getIpAddressesString()} is already allowlisted");
             return;
         }
 
         $allowlist = $allowlist->upsertEntry($allowlistEntry);
 
         $this->allowlistRepository->save($allowlist);
-        Log::info($allowlistEntry->getUserName(), "{$allowlistEntry->getIpAddressesString()} has been added to the allowlist");
+        Log::info("{$allowlistEntry->getIpAddressesString()} has been added to the allowlist");
     }
 }

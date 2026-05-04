@@ -1,37 +1,15 @@
 <?php
 
-namespace Controller;
+namespace Portknock\Tests\Controller;
 
-use Portknock\Controller\TableView;
-use Portknock\Helper\OutputHandler;
+use Portknock\Controller\TableView as TableViewController;
 use Portknock\Model\HttpHeaders;
 use Portknock\Model\User;
 use Portknock\Model\UserAccess;
-use Portknock\Repository\AllowlistRepository;
-use Portknock\Repository\KeyRepository;
-use Portknock\Repository\UserRepository;
-use Portknock\Tests\AbstractCase;
 use Portknock\Tests\Mock\MockException;
 
-class TableViewTest extends AbstractCase
+class TableViewTest extends AbstractControllerTest
 {
-    private TableView $tableViewController;
-    private AllowlistRepository $allowlistRepository;
-    private UserRepository $userRepository;
-    private KeyRepository $keyRepository;
-    private OutputHandler $outputHandler;
-
-    protected function setUp(): void
-    {
-        $this->allowlistRepository = $this->createMock(AllowlistRepository::class);
-        $this->userRepository      = $this->createMock(UserRepository::class);
-        $this->keyRepository       = $this->createMock(KeyRepository::class);
-        $this->outputHandler       = $this->createMock(OutputHandler::class);
-        $this->tableViewController = new TableView($this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
-
-        parent::setUp();
-    }
-
     public function testShowList()
     {
         $expectedOutput = <<<EOD
@@ -42,7 +20,6 @@ class TableViewTest extends AbstractCase
         2a02:26f0:1180:35::210:6ad4
         EOD;
 
-        $headers   = $this->getRawTestHeaders();
         $user      = new User(self::TEST_USER, UserAccess::READ_ONLY);
         $allowList = $this->getTestAllowlist();
 
@@ -66,64 +43,29 @@ class TableViewTest extends AbstractCase
             ->method('echo')
             ->with($expectedOutput);
 
-        $this->tableViewController->showList($headers);
+        $this->getTableViewController()->showList();
     }
     public function testMissingSesamHeader()
     {
-        $headers = $this->getRawTestHeaders();
-        unset($headers[HttpHeaders::HEADER_SESAM]);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(401)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->tableViewController->showList($headers);
+        $this->prepMissingSesamHeader();
+        $this->getTableViewController()->showList();
     }
 
     public function testNoUserMatchForSesamHeader()
     {
-        $headers                            = $this->getRawTestHeaders();
-        $headers[HttpHeaders::HEADER_SESAM] = 'La-Di-Da-Di';
-
-        $this->keyRepository->expects($this->once())
-            ->method('getKey')
-            ->willReturn(self::TEST_KEY);
-
-        $this->userRepository->expects($this->once())
-            ->method('getUserByAuthHash')
-            ->willReturn(null);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(401)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->tableViewController->showList($headers);
+        $this->prepNoUserMatchForSesamHeader();
+        $this->getTableViewController()->showList();
     }
 
     public function testUserIncorrectPermissions()
     {
         $user    = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
-        $headers = $this->getRawTestHeaders();
+        $this->prepUserIncorrectPermissions($user);
+        $this->getTableViewController()->showList();
+    }
 
-        $this->keyRepository->expects($this->once())
-            ->method('getKey')
-            ->willReturn(self::TEST_KEY);
-
-        $this->userRepository->expects($this->once())
-            ->method('getUserByAuthHash')
-            ->with(self::TEST_HASH)
-            ->willReturn($user);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(403)
-            ->willThrowException(new MockException());
-
-        $this->expectException(MockException::class);
-        $this->tableViewController->showList($headers);
+    private function getTableViewController(): TableViewController
+    {
+        return new TableViewController($this->headers, $this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
     }
 }

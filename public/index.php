@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
@@ -16,16 +17,23 @@ require '../vendor/autoload.php';
 $uri = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 $headers = $_SERVER;
 
+$dateFormat = "Y-m-d H:i:s";
+$output = "[%datetime%] %level_name%: %message% %context%" . PHP_EOL;
+$formatter = new LineFormatter($output, $dateFormat);
+
 $logger = new Logger("PortKnockLog");
-$logger->pushHandler(new StreamHandler(__DIR__.'/../data/history.log', Level::Debug));
+$steamHandler = new StreamHandler(__DIR__.'/../data/history.log', Level::Debug);
+$steamHandler->setFormatter($formatter);
+
+$logger->pushHandler($steamHandler);
 Log::setLogger($logger);
 
 switch ($uri) {
     case '/':
-        new KnockController()->knock($headers);
+        new KnockController($headers)->knock();
         break;
     case '/view':
-        new TableViewController()->showList($headers);
+        new TableViewController($headers)->showList();
         break;
     default:
         new OutputHandler()->die(404);

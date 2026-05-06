@@ -1,1 +1,10 @@
-[]
+{
+    "617769b3580c06c1d11826bb9662b8914681023db2daec33fc785dfece326f86": {
+        "name": "conFrituur",
+        "access": "WRITE_ONLY"
+    },
+    "d11e18f4c73471125562888e19bb28a677b098107c3db6beffb0c594fce7bdb1": {
+        "name": "OPNsense",
+        "access": "READ_ONLY"
+    }
+}

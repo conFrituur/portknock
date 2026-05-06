@@ -2,8 +2,6 @@
 
 namespace Portknock\Helper;
 
-use RuntimeException;
-
 class Util
 {
     public static function isValidIPv4(string $ip): bool

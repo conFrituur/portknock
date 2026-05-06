@@ -62,7 +62,7 @@ class AllowlistTest extends AbstractCase
             new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6),
             $updateEntry,
             new AllowlistEntry(self::TEST_USER_3, self::IPv4_2, self::IPv6_3),
-            $newEntry
+            $newEntry,
         ]);
 
         $actualAllowlist   = $this->getTestAllowlist();

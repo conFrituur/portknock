@@ -3,22 +3,20 @@
 namespace Portknock\Tests\Controller;
 
 use Portknock\Controller\TableView as TableViewController;
-use Portknock\Model\HttpHeaders;
 use Portknock\Model\User;
 use Portknock\Model\UserAccess;
-use Portknock\Tests\Mock\MockException;
 
 class TableViewTest extends AbstractControllerTest
 {
     public function testShowList()
     {
         $expectedOutput = <<<EOD
-        37.97.254.1
-        2a01:7c8:3:1337::1
-        192.168.200.1
-        fd::1
-        2a02:26f0:1180:35::210:6ad4
-        EOD;
+            37.97.254.1
+            2a01:7c8:3:1337::1
+            192.168.200.1
+            fd::1
+            2a02:26f0:1180:35::210:6ad4
+            EOD;
 
         $user      = new User(self::TEST_USER, UserAccess::READ_ONLY);
         $allowList = $this->getTestAllowlist();

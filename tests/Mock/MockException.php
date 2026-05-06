@@ -4,6 +4,4 @@ namespace Portknock\Tests\Mock;
 
 use RuntimeException;
 
-class MockException extends RuntimeException
-{
-}
+class MockException extends RuntimeException {}

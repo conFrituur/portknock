@@ -5,10 +5,8 @@ namespace Portknock\Tests\Controller;
 use Portknock\Controller\Knock as KnockController;
 use Portknock\Model\Allowlist;
 use Portknock\Model\AllowlistEntry;
-use Portknock\Model\HttpHeaders;
 use Portknock\Model\User;
 use Portknock\Model\UserAccess;
-use Portknock\Tests\Mock\MockException;
 
 class KnockTest extends AbstractControllerTest
 {

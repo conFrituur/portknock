@@ -16,11 +16,10 @@ abstract class AbstractController
     protected readonly UserRepository $userRepository;
     protected readonly KeyRepository $keyRepository;
     protected readonly OutputHandler $outputHandler;
-    protected readonly HttpHeaders $httpHeaders;
     protected string $remoteAddr;
 
     public function __construct(
-        array $headers,
+        protected readonly HttpHeaders $httpHeaders,
         ?AllowlistRepository $allowlistRepository = null,
         ?UserRepository $userRepository = null,
         ?KeyRepository $keyRepository = null,
@@ -30,8 +29,6 @@ abstract class AbstractController
         $this->userRepository      = $userRepository ?? new UserRepository();
         $this->keyRepository       = $keyRepository ?? new KeyRepository();
         $this->outputHandler       = $outputHandler ?? new OutputHandler();
-
-        $this->httpHeaders = new HttpHeaders($headers);
 
         // even if not used in controller itself, it adds requesting ip context to the logs
         $this->parseAndValidateRemoteIpFromHeaders();

@@ -9,7 +9,6 @@ use RuntimeException;
 
 class UtilTest extends AbstractCase
 {
-
     #[DataProvider('ipv4DataProvider')]
     public function testValidIpv4(string $ip, bool $isValid): void
     {

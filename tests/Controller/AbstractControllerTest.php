@@ -14,7 +14,7 @@ use Portknock\Tests\Mock\MockException;
 
 class AbstractControllerTest extends AbstractCase
 {
-    protected array $headers;
+    protected HttpHeaders $headers;
     protected AllowlistRepository $allowlistRepository;
     protected UserRepository $userRepository;
     protected KeyRepository $keyRepository;
@@ -22,7 +22,7 @@ class AbstractControllerTest extends AbstractCase
 
     protected function setUp(): void
     {
-        $this->headers             = $this->getRawTestHeaders();
+        $this->headers             = $this->getTestHeaders();
         $this->allowlistRepository = $this->createMock(AllowlistRepository::class);
         $this->userRepository      = $this->createMock(UserRepository::class);
         $this->keyRepository       = $this->createMock(KeyRepository::class);
@@ -34,7 +34,7 @@ class AbstractControllerTest extends AbstractCase
     {
         $headers = $this->getRawTestHeaders();
         unset($headers[HttpHeaders::HEADER_REMOTE_ADDR]);
-        $this->headers = $headers;
+        $this->headers = new HttpHeaders($headers);
 
         $this->outputHandler->expects($this->once())
             ->method('die')
@@ -49,7 +49,7 @@ class AbstractControllerTest extends AbstractCase
     {
         $headers                                  = $this->getRawTestHeaders();
         $headers[HttpHeaders::HEADER_REMOTE_ADDR] = 'La-Di-Da-Di';
-        $this->headers = $headers;
+        $this->headers = new HttpHeaders($headers);
 
         $this->outputHandler->expects($this->once())
             ->method('die')
@@ -64,7 +64,7 @@ class AbstractControllerTest extends AbstractCase
     {
         $headers = $this->getRawTestHeaders();
         unset($headers[HttpHeaders::HEADER_SESAM]);
-        $this->headers = $headers;
+        $this->headers = new HttpHeaders($headers);
 
         $this->outputHandler->expects($this->once())
             ->method('die')
@@ -78,7 +78,7 @@ class AbstractControllerTest extends AbstractCase
     {
         $headers                            = $this->getRawTestHeaders();
         $headers[HttpHeaders::HEADER_SESAM] = 'La-Di-Da-Di';
-        $this->headers = $headers;
+        $this->headers = new HttpHeaders($headers);
 
         $this->keyRepository->expects($this->once())
             ->method('getKey')

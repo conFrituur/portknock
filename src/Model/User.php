@@ -9,9 +9,7 @@ readonly class User
     public const string FIELD_NAME = 'name';
     public const string FIELD_ACCESS = 'access';
 
-    public function __construct(private string $name, private UserAccess $userAccess)
-    {
-    }
+    public function __construct(private string $name, private UserAccess $userAccess) {}
 
     public function getName(): string
     {

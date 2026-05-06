@@ -38,12 +38,12 @@ class AbstractFileRepositoryTest extends AbstractCase
             ->willReturn(false);
         $mockFileHandler->expects($this->once())
             ->method('filePutContents')
-            ->with(self::FILE_TEST, '');
+            ->with(self::FILE_TEST, self::TEST_CONTENTS);
 
         $fileRepository = new FileRepositoryMock($mockFileHandler);
-        $actualContents = $fileRepository->callGetOrCreateFile(self::FILE_TEST);
+        $actualContents = $fileRepository->callGetOrCreateFile(self::FILE_TEST, self::TEST_CONTENTS);
 
-        self::assertEmpty($actualContents);
+        self::assertSame(self::TEST_CONTENTS, $actualContents);
     }
 
     public function testLoadFile(): void

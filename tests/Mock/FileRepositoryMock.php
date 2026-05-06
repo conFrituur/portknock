@@ -6,9 +6,9 @@ use Portknock\Repository\AbstractFileRepository;
 
 class FileRepositoryMock extends AbstractFileRepository
 {
-    public function callGetOrCreateFile(string $filename): string
+    public function callGetOrCreateFile(string $filename, string $defaultContent = ''): string
     {
-        return $this->getOrCreateFile($filename);
+        return $this->getOrCreateFile($filename, $defaultContent);
     }
 
     public function callLoadFile(string $filename): string|false

@@ -15,13 +15,13 @@ abstract class AbstractFileRepository
         $this->fileHandler = $fileHandler ?? new FileHandler();
     }
 
-    protected function getOrCreateFile(string $filename): string
+    protected function getOrCreateFile(string $filename, string $defaultContent = ''): string
     {
         $contents = $this->loadFile($filename);
         if ($contents === false) {
-            $this->fileHandler->filePutContents($filename, '');
+            $this->fileHandler->filePutContents($filename, $defaultContent);
             Log::notice("Created file $filename");
-            $contents = '';
+            $contents = $defaultContent;
         }
         return $contents;
     }

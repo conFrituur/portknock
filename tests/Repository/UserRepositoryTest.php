@@ -46,6 +46,22 @@ class UserRepositoryTest extends AbstractCase
         self::assertNull($actualUser);
     }
 
+    public function testNoUserFileExist(): void
+    {
+        $mockFileHandler = $this->createMock(FileHandler::class);
+        $mockFileHandler->expects($this->once())
+            ->method('fileExists')
+            ->with(UserRepository::FILE_USERLIST)
+            ->willReturn(false);
+        $mockFileHandler->expects($this->once())
+            ->method('filePutContents')
+            ->with(UserRepository::FILE_USERLIST, json_encode([]));
+
+        $userRepository = new UserRepository($mockFileHandler);
+        $actualUser     = $userRepository->getUserByAuthHash('Dunno');
+        self::assertNull($actualUser);
+    }
+
     protected function getTestUserListJson(): string
     {
         return json_encode([

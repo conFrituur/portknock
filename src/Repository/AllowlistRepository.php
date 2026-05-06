@@ -8,7 +8,7 @@ use Portknock\Model\Allowlist;
 
 class AllowlistRepository extends AbstractFileRepository
 {
-    public const string FILE_ALLOWLIST = "../../data/allowlist.json";
+    public const string FILE_ALLOWLIST = "../data/allowlist.json";
 
     public function getList(): Allowlist
     {

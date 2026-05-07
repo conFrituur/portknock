@@ -19,9 +19,11 @@ abstract class AbstractCase extends TestCase
     protected const string IPv4_2 = "192.168.200.1";
     protected const string IPv4_3 = "80.69.69.100";
     protected const string IPv6 = "2a01:7c8:3:1337::1";
-    protected const string IPv6Range = "2a01:7c8:3:1337::1/64";
+    protected const string IPv6Range = "2a01:7c8:3:1337::/64";
     protected const string IPv6_2 = "fd::1";
+    protected const string IPv6Range_2 = "fd::/64";
     protected const string IPv6_3 = "2a02:26f0:1180:35::210:6ad4";
+    protected const string IPv6Range_3 = "2a02:26f0:1180:35::/64";
     protected const string TEST_USER = "Test";
     protected const string TEST_USER_2 = "Test2";
     protected const string TEST_USER_3 = "Test3";

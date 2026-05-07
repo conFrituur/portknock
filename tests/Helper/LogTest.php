@@ -1,6 +1,6 @@
 <?php
 
-namespace Helper;
+namespace Portknock\Tests\Helper;
 
 use Monolog\Handler\NoopHandler;
 use Monolog\Logger;

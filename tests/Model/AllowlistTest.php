@@ -27,13 +27,13 @@ class AllowlistTest extends AbstractCase
         // should still contain duplicates at this point
         $expectedArrayOfIps = [
             self::IPv4,
-            self::IPv6,
+            self::IPv6Range,
             self::IPv4_2,
-            self::IPv6_2,
+            self::IPv6Range_2,
             self::IPv4_2,
-            self::IPv6_3,
+            self::IPv6Range_3,
         ];
-        $actualIpList       = $this->getTestAllowlist()->toArrayOfIps();
+        $actualIpList       = $this->getTestAllowlist()->toArrayOfIpsAndRanges();
         self::assertEquals($expectedArrayOfIps, $actualIpList);
     }
 

@@ -10,8 +10,9 @@
     "require": {
         "php": "^8.4",
         "ext-json": "*",
-        "psr/log": "^3.0",
-        "monolog/monolog": "^3.0"
+        "mlocati/ip-lib": "^1.22",
+        "monolog/monolog": "^3.0",
+        "psr/log": "^3.0"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.22",
@@ -20,6 +21,7 @@
         "phpstan/phpstan": "^1.4",
         "phpstan/phpstan-phpunit": "^1.0",
         "phpunit/phpunit": "^13",
+        "psy/psysh": "^0.12.22",
         "roave/security-advisories": "dev-latest"
     },
     "minimum-stability": "stable",

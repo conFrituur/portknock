@@ -2,6 +2,10 @@
 
 namespace Portknock\Helper;
 
+use IPLib\Range\Subnet;
+use IPLib\Factory;
+use RuntimeException;
+
 class Util
 {
     public static function isValidIPv4(string $ip): bool
@@ -19,5 +23,24 @@ class Util
     public static function hash(string $data, string $key): string
     {
         return hash_hmac('sha256', $data, $key);
+    }
+
+    /**
+     * Prefix length of 64 is assumed, as this is most likely used with SLAAC
+     *
+     * @param string $ipAddress
+     * @param int    $prefixLength
+     * @return string
+     */
+    public static function getRangeForIpv6Address(string $ipAddress, int $prefixLength = 64): string
+    {
+        if (!self::isValidIPv6($ipAddress)) {
+            throw new RuntimeException("IP[=$ipAddress] is not a valid IPv6 address");
+        }
+
+        /** @var Subnet $ipRange */
+        $ipRange = Factory::parseRangeString("$ipAddress/$prefixLength");
+
+        return $ipRange->getStartAddress() .  "/" . $ipRange->getNetworkPrefix();
     }
 }

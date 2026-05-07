@@ -37,11 +37,11 @@ readonly class Allowlist
     /**
      * @return string[]
      */
-    public function toArrayOfIps(): array
+    public function toArrayOfIpsAndRanges(): array
     {
         $ipEntries = [];
         foreach ($this->allowlistEntries as $allowlistEntry) {
-            foreach ($allowlistEntry->getIpArray() as $allowlistIp) {
+            foreach ($allowlistEntry->getIpAndRangeArray() as $allowlistIp) {
                 $ipEntries[] = $allowlistIp;
             }
         }

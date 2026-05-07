@@ -49,7 +49,7 @@ class TableView extends AbstractController
         $allowlist = $this->allowlistRepository->getList();
 
         // Remove any duplicate IP's from list
-        return array_unique($allowlist->toArrayOfIps());
+        return array_unique($allowlist->toArrayOfIpsAndRanges());
     }
 
     /**

@@ -70,9 +70,9 @@ class AllowlistEntryTest extends AbstractCase
         $ipv6OnlyActual = new AllowlistEntry(self::TEST_USER, null, self::IPv6);
         $bothActual     = new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6);
 
-        self::assertEquals($ipv4OnlyExpected, $ipv4OnlyActual->getIpAddressesString());
-        self::assertEquals($ipv6OnlyExpected, $ipv6OnlyActual->getIpAddressesString());
-        self::assertEquals($bothExpected, $bothActual->getIpAddressesString());
+        self::assertEquals($ipv4OnlyExpected, $ipv4OnlyActual->getIpAddressAndRangeString());
+        self::assertEquals($ipv6OnlyExpected, $ipv6OnlyActual->getIpAddressAndRangeString());
+        self::assertEquals($bothExpected, $bothActual->getIpAddressAndRangeString());
     }
 
     #[DataProvider('equalsDataProvider')]

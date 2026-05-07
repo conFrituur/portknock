@@ -51,8 +51,10 @@ readonly class AllowlistEntry
 
     public function getIpv6Range(): ?string
     {
-        // #@todo calculate range
-        return $this->getIpv6Address() ? $this->getIpv6Address() . '/64' : null;
+        if ($this->ipv6Address === null) {
+            return null;
+        }
+        return Util::getRangeForIpv6Address($this->ipv6Address);
     }
 
     /**
@@ -67,6 +69,23 @@ readonly class AllowlistEntry
         }
         if ($this->ipv6Address) {
             $contents[self::FIELD_IPV6] = $this->ipv6Address;
+        }
+
+        return $contents;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getIpAndRangeArray(): array
+    {
+        $contents = [];
+
+        if ($this->ipv4Address) {
+            $contents[] = $this->ipv4Address;
+        }
+        if ($this->getIpv6Range()) {
+            $contents[] = $this->getIpv6Range();
         }
 
         return $contents;
@@ -101,7 +120,7 @@ readonly class AllowlistEntry
         return $allowlistEntries;
     }
 
-    public function getIpAddressesString(): string
+    public function getIpAddressAndRangeString(): string
     {
         $addresses = [];
 

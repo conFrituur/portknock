@@ -15,7 +15,7 @@ class KnockTest extends AbstractControllerTest
         $user              = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
         $emptyAllowList    = new Allowlist([]);
         $expectedAllowList = new Allowlist([
-            new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR),
+            new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR_RANGE),
         ]);
 
         // getRemoteAddressFromHeaders - no mock required
@@ -47,7 +47,7 @@ class KnockTest extends AbstractControllerTest
     {
         $user      = new User(self::TEST_USER, UserAccess::WRITE_ONLY);
         $allowList = new Allowlist([
-            new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR),
+            new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR_RANGE),
         ]);
 
         $this->keyRepository->expects($this->once())

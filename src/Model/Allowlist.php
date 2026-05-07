@@ -41,7 +41,7 @@ readonly class Allowlist
     {
         $ipEntries = [];
         foreach ($this->allowlistEntries as $allowlistEntry) {
-            foreach ($allowlistEntry->getIpAndRangeArray() as $allowlistIp) {
+            foreach ($allowlistEntry->getIpArray() as $allowlistIp) {
                 $ipEntries[] = $allowlistIp;
             }
         }

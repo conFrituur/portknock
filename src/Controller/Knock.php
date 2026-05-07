@@ -13,7 +13,7 @@ class Knock extends AbstractController
     public function knock(): void
     {
         $user           = $this->getAuthorizedUserFromHeaders();
-        $allowlistEntry = AllowlistEntry::create($user->getName(), $this->remoteAddr);
+        $allowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
         $this->upsertEntryToAllowlist($allowlistEntry);
     }
 

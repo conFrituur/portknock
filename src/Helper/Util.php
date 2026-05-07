@@ -20,6 +20,17 @@ class Util
         return filter_var($ip, FILTER_VALIDATE_IP, $opts) !== false;
     }
 
+    public static function isValidIPv6Range(string $range): bool
+    {
+        $ipRange = Factory::parseRangeString($range);
+
+        if ($ipRange instanceof Subnet) {
+            return Util::isValidIPv6($ipRange->getStartAddress());
+        }
+
+        return false;
+    }
+
     public static function hash(string $data, string $key): string
     {
         return hash_hmac('sha256', $data, $key);

@@ -10,7 +10,7 @@ readonly class AllowlistEntry
     public const string FIELD_IPV4 = 'ipv4';
     public const string FIELD_IPV6 = 'ipv6';
 
-    public function __construct(private string $userName, private ?string $ipv4Address, private ?string $ipv6Address)
+    public function __construct(private string $userName, private ?string $ipv4Address, private ?string $ipv6Range)
     {
         $this->validate();
     }
@@ -21,16 +21,16 @@ readonly class AllowlistEntry
             throw new DomainException("Username[={$this->userName}] must be at least 3 characters long");
         }
 
-        if (!$this->ipv4Address && !$this->ipv6Address) {
-            throw new DomainException("Must give at least one IPv4 or IPv6 address");
+        if (!$this->ipv4Address && !$this->ipv6Range) {
+            throw new DomainException("Must give at least one IPv4 or IPv6 range");
         }
 
         if ($this->ipv4Address && !Util::isValidIPv4($this->ipv4Address)) {
-            throw new DomainException("IPv4[={$this->ipv4Address}] address is invalid");
+            throw new DomainException("IPv4 address[={$this->ipv4Address}] is invalid");
         }
 
-        if ($this->ipv6Address && !Util::isValidIPv6($this->ipv6Address)) {
-            throw new DomainException("IPv6[={$this->ipv6Address}] address is invalid");
+        if ($this->ipv6Range && !Util::isValidIPv6Range($this->ipv6Range)) {
+            throw new DomainException("IPv6 range[[={$this->ipv6Range}] is invalid");
         }
     }
 
@@ -44,17 +44,9 @@ readonly class AllowlistEntry
         return $this->ipv4Address;
     }
 
-    public function getIpv6Address(): ?string
-    {
-        return $this->ipv6Address;
-    }
-
     public function getIpv6Range(): ?string
     {
-        if ($this->ipv6Address === null) {
-            return null;
-        }
-        return Util::getRangeForIpv6Address($this->ipv6Address);
+        return $this->ipv6Range;
     }
 
     /**
@@ -67,37 +59,21 @@ readonly class AllowlistEntry
         if ($this->ipv4Address) {
             $contents[self::FIELD_IPV4] = $this->ipv4Address;
         }
-        if ($this->ipv6Address) {
-            $contents[self::FIELD_IPV6] = $this->ipv6Address;
+        if ($this->ipv6Range) {
+            $contents[self::FIELD_IPV6] = $this->ipv6Range;
         }
 
         return $contents;
     }
 
-    /**
-     * @return string[]
-     */
-    public function getIpAndRangeArray(): array
-    {
-        $contents = [];
-
-        if ($this->ipv4Address) {
-            $contents[] = $this->ipv4Address;
-        }
-        if ($this->getIpv6Range()) {
-            $contents[] = $this->getIpv6Range();
-        }
-
-        return $contents;
-    }
-
-    public static function create(string $userName, string $ipAddress): self
+    public static function createFromAddress(string $userName, string $ipAddress): self
     {
         if (Util::isValidIPv4($ipAddress)) {
             return new self($userName, $ipAddress, null);
         }
         if (Util::isValidIPv6($ipAddress)) {
-            return new self($userName, null, $ipAddress);
+            $ipv6Range = Util::getRangeForIpv6Address($ipAddress);
+            return new self($userName, null, $ipv6Range);
         }
 
         throw new DomainException("IpAddress[={$ipAddress}] is neither a valid IPv4 nor IPv6 address");
@@ -112,9 +88,9 @@ readonly class AllowlistEntry
         /** @var AllowlistEntry[] $allowlistEntries */
         $allowlistEntries = [];
         foreach ($jsonData as $userName => $ipAddresses) {
-            $ipv4 = $ipAddresses[self::FIELD_IPV4] ?? null;
-            $ipv6 = $ipAddresses[self::FIELD_IPV6] ?? null;
-            $allowlistEntries[] = new self($userName, $ipv4, $ipv6);
+            $ipv4Address        = $ipAddresses[self::FIELD_IPV4] ?? null;
+            $ipv6Range          = $ipAddresses[self::FIELD_IPV6] ?? null;
+            $allowlistEntries[] = new self($userName, $ipv4Address, $ipv6Range);
         }
 
         return $allowlistEntries;
@@ -138,6 +114,6 @@ readonly class AllowlistEntry
     {
         return $this->getUserName() === $other->getUserName()
             && $this->getIpv4Address() === $other->getIpv4Address()
-            && $this->getIpv6Address() === $other->getIpv6Address();
+            && $this->getIpv6Range() === $other->getIpv6Range();
     }
 }

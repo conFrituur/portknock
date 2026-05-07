@@ -21,13 +21,19 @@ class UtilTest extends AbstractCase
         static::assertSame(Util::isValidIPv6($ip), $isValid);
     }
 
+    #[DataProvider('ipv6RangeDataProvider')]
+    public function testValidIpv6Range(string $range, bool $isValid): void
+    {
+        static::assertSame(Util::isValidIPv6Range($range), $isValid);
+    }
+
     public function testHash(): void
     {
         $hash = Util::hash('hetlaatstelevel', 'sleutel');
         static::assertSame('f677518b4fe0b8f556fe60131e4244dd9961718d6fbbf219fbd5a98a2412907b', $hash);
     }
 
-    #[DataProvider('ipv6ToRangeDataProvider')]
+    #[DataProvider('ipv6AddrToRangeDataProvider')]
     public function testGetRangeForIpv6Address(string $ipAddress, ?string $expectedRange): void
     {
 
@@ -70,6 +76,7 @@ class UtilTest extends AbstractCase
             ['2001:0db8:85a3:0000:0000:8a2e:0370:7334', true],
             ['2001:db8:85a3::8a2e:370:7334', true],
             ['2a01:7c8:3:1337::1', true],
+            ['2a01:7c8:3:1337::/64', false],
             ['fe80::1ff:fe23:4567:890a', false],
             ['fe80::1', false],
             ['fd0d::1', true],
@@ -79,7 +86,25 @@ class UtilTest extends AbstractCase
         ];
     }
 
-    public static function ipv6ToRangeDataProvider(): array
+    public static function ipv6RangeDataProvider(): array
+    {
+        return [
+            [self::IPv6, false],
+            [self::IPv6Range, true],
+            ['2001:db8:85a3::8a2e:370:7334', false],
+            ['2001:db8:85a3::/64', true],
+            ['2001:0db8:85a3:0000:0000:8a2e:0370:7334', false],
+            ['2a02:a119:8fa2:c5c4::/64', true],
+            ['fd0d::/64', true],
+            ['fe80::1', false],
+            ['fe80::/32', false],
+            ['80.69.69.100', false],
+            ['80.69.69.0/24', false],
+            ['uhr3287fewjkb3r28y9', false],
+        ];
+    }
+
+    public static function ipv6AddrToRangeDataProvider(): array
     {
         return [
             [self::IPv6, self::IPv6Range],

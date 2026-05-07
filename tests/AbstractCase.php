@@ -15,10 +15,12 @@ use Portknock\Model\HttpHeaders;
 abstract class AbstractCase extends TestCase
 {
     protected const string REMOTE_ADDR = "2a01:7c8:901:0:c01d:c0ff:ee:bad3";
+    protected const string REMOTE_ADDR_RANGE = "2a01:7c8:901::/64";
     protected const string IPv4 = "37.97.254.1";
     protected const string IPv4_2 = "192.168.200.1";
     protected const string IPv4_3 = "80.69.69.100";
     protected const string IPv6 = "2a01:7c8:3:1337::1";
+    protected const string IPv6_SAME_RANGE = "2a01:7c8:3:1337:cf4d:1c0c:3f19:6bed";
     protected const string IPv6Range = "2a01:7c8:3:1337::/64";
     protected const string IPv6_2 = "fd::1";
     protected const string IPv6Range_2 = "fd::/64";
@@ -66,9 +68,9 @@ abstract class AbstractCase extends TestCase
     protected function getTestAllowlist(): Allowlist
     {
         $allowlistEntries = [
-            new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6),
-            new AllowlistEntry(self::TEST_USER_2, self::IPv4_2, self::IPv6_2),
-            new AllowlistEntry(self::TEST_USER_3, self::IPv4_2, self::IPv6_3),
+            new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
+            new AllowlistEntry(self::TEST_USER_2, self::IPv4_2, self::IPv6Range_2),
+            new AllowlistEntry(self::TEST_USER_3, self::IPv4_2, self::IPv6Range_3),
         ];
         return new Allowlist($allowlistEntries);
     }
@@ -76,9 +78,9 @@ abstract class AbstractCase extends TestCase
     protected function getTestAllowlistJson(): string
     {
         return json_encode([
-            self::TEST_USER   => [AllowlistEntry::FIELD_IPV4 => self::IPv4, AllowlistEntry::FIELD_IPV6 => self::IPv6],
-            self::TEST_USER_2 => [AllowlistEntry::FIELD_IPV4 => self::IPv4_2, AllowlistEntry::FIELD_IPV6 => self::IPv6_2],
-            self::TEST_USER_3 => [AllowlistEntry::FIELD_IPV4 => self::IPv4_2, AllowlistEntry::FIELD_IPV6 => self::IPv6_3],
+            self::TEST_USER   => [AllowlistEntry::FIELD_IPV4 => self::IPv4, AllowlistEntry::FIELD_IPV6 => self::IPv6Range],
+            self::TEST_USER_2 => [AllowlistEntry::FIELD_IPV4 => self::IPv4_2, AllowlistEntry::FIELD_IPV6 => self::IPv6Range_2],
+            self::TEST_USER_3 => [AllowlistEntry::FIELD_IPV4 => self::IPv4_2, AllowlistEntry::FIELD_IPV6 => self::IPv6Range_3],
         ]);
     }
 }

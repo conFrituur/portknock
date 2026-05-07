@@ -40,7 +40,12 @@ class KnockTest extends AbstractControllerTest
             ->method('save')
             ->with($expectedAllowList);
 
+        $this->outputHandler->expects($this->once())
+            ->method('echo')
+            ->with('200 Added to allowlist');
+
         $this->getKnockController()->knock();
+        self::assertTrue($this->logHandler->hasInfoThatContains("has been added to the allowlist"));
     }
 
     public function testSuccessfulKnockAlreadyAllowlisted()
@@ -65,6 +70,10 @@ class KnockTest extends AbstractControllerTest
 
         $this->allowlistRepository->expects($this->never())
             ->method('save');
+
+        $this->outputHandler->expects($this->once())
+            ->method('echo')
+            ->with('200 Already in allowlist');
 
         $this->getKnockController()->knock();
         self::assertTrue($this->logHandler->hasDebugThatContains("already allowlisted"));

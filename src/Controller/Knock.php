@@ -54,6 +54,7 @@ class Knock extends AbstractController
         // Check if IPs are already allowlisted by this user, don't care for duplicates among other users at this point
         if ($allowlist->hasEntryInList($allowlistEntry)) {
             Log::debug("skipping, {$allowlistEntry->getIpAddressAndRangeString()} is already allowlisted");
+            $this->outputHandler->echo("200 Already in allowlist");
             return;
         }
 
@@ -61,5 +62,6 @@ class Knock extends AbstractController
 
         $this->allowlistRepository->save($allowlist);
         Log::info("{$allowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
+        $this->outputHandler->echo("200 Added to allowlist");
     }
 }

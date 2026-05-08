@@ -1,0 +1,31 @@
+name: lint-test
+on:
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  php-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Run PHPCS
+        run: composer exec "php-cs-fixer check --diff --using-cache=no --ansi"
+
+      - name: Run PHPStan
+        run: composer exec "phpstan --no-interaction --ansi --no-progress analyse"
+
+      - name: Run PHPUnit
+        run: composer exec "phpunit"

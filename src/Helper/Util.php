@@ -52,6 +52,6 @@ class Util
         /** @var Subnet $ipRange */
         $ipRange = Factory::parseRangeString("$ipAddress/$prefixLength");
 
-        return $ipRange->getStartAddress() .  "/" . $ipRange->getNetworkPrefix();
+        return $ipRange->getStartAddress() . "/" . $ipRange->getNetworkPrefix();
     }
 }

@@ -1,0 +1,48 @@
+name: build
+on:
+  push:
+    branches: [ "main" ]
+permissions:
+  contents: write
+jobs:
+  php-lint-test-cov:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: pcov
+
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Run PHPCS
+        run: composer exec "php-cs-fixer check --diff --using-cache=no --ansi"
+
+      - name: Run PHPStan
+        run: composer exec "phpstan --no-interaction --ansi --no-progress analyse"
+
+      - name: Run PHPUnit
+        run: composer exec "phpunit --coverage-clover=clover.xml"
+
+      - name: Creating coverage folder
+        run: mkdir -p coverage
+
+      - name: Make code coverage badge
+        uses: timkrase/phpunit-coverage-badge@v1.2.1
+        with:
+          coverage_badge_path: coverage/coverage.svg
+          push_badge: false
+
+      - name: Publish coverage report to coverage-badge branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: coverage-badge
+          folder: coverage

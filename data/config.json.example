@@ -1,4 +1,4 @@
 {
-    "v4host": "v4-portknock.example.com",
-    "v6host": "v6-portknock.example.com"
+    "v4host": "v4-knock.example.nl",
+    "v6host": "v6-knock.example.nl"
 }

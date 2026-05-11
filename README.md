@@ -40,10 +40,10 @@ You can trigger it manually or automatically, when you connect to a WiFi network
 ## Portknock application
 This PHP application should be hosted on a publicly accessible webserver. The knocker must be able to knock from anywhere.
 Example URLs: 
-- `https://portknock.example.com/knock`
-- `https://v4-portknock.example.com/knock` (ipv4 only for second knock)
-- `https://v6-portknock.example.com/knock` (ipv6 only for second knock)
-- `https://portknock.example.com/knock/view`
+- `https://knock.example.nl/knock`
+- `https://v4-knock.example.nl/knock` (ipv4 only for second knock)
+- `https://v6-knock.example.nl/knock` (ipv6 only for second knock)
+- `https://knock.example.nl/knock/view`
 
 ### Webserver 
 
@@ -55,17 +55,17 @@ NGINX example config:
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
-    server_name portknock.example.com v4-portknock.example.com v6-portknock.example.com;
+    server_name knock.example.nl v4-knock.example.nl v6-knock.example.nl;
     root /var/www;
     index index.php;
 
     location /knock {
-      alias /var/www/portknock.example.com/knock/public/;
+      alias /var/www/portknock.example.nl/knock/public/;
       try_files $uri $uri/ /knock/index.php;
 
       location ~ \.php$ {
         include fastcgi.conf;
-        fastcgi_param SCRIPT_FILENAME /var/www/portknock.example.com/knock/public/index.php;
+        fastcgi_param SCRIPT_FILENAME /var/www/portknock.example.nl/knock/public/index.php;
         fastcgi_index index.php;
         fastcgi_pass unix:/run/php/php8.4-fpm.sock;
       }
@@ -81,8 +81,8 @@ Delete one or both settings from the file if you do not want to do a second knoc
 
 ```
 {
-    "v4host": "v4-portknock.example.com",
-    "v6host": "v6-portknock.example.com"
+    "v4host": "v4-knock.example.nl",
+    "v6host": "v6-knock.example.nl"
 }
 ```
 

@@ -28,4 +28,4 @@ jobs:
         run: composer exec "phpstan --no-interaction --ansi --no-progress analyse"
 
       - name: Run PHPUnit
-        run: composer exec "phpunit"
+        run: composer exec "phpunit --no-progress"

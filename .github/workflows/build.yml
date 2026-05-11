@@ -30,7 +30,7 @@ jobs:
         run: composer exec "phpstan --no-interaction --ansi --no-progress analyse"
 
       - name: Run PHPUnit
-        run: composer exec "phpunit --coverage-clover=clover.xml"
+        run: composer exec "phpunit --no-progress --coverage-clover=clover.xml"
 
       - name: Creating coverage folder
         run: mkdir -p coverage

@@ -9,6 +9,19 @@ use RuntimeException;
 
 class UtilTest extends AbstractCase
 {
+    public function testGenerateRandomString(): void
+    {
+        $key = Util::generateRandomString(32);
+        static::assertTrue(mb_check_encoding($key, 'ASCII'), "Random key not ASCII");
+        static::assertSame(64, strlen($key));
+    }
+
+    public function testHash(): void
+    {
+        $hash = Util::hash('hetlaatstelevel', 'sleutel');
+        static::assertSame('f677518b4fe0b8f556fe60131e4244dd9961718d6fbbf219fbd5a98a2412907b', $hash);
+    }
+
     #[DataProvider('ipv4DataProvider')]
     public function testValidIpv4(string $ip, bool $isValid): void
     {
@@ -25,12 +38,6 @@ class UtilTest extends AbstractCase
     public function testValidIpv6Range(string $range, bool $isValid): void
     {
         static::assertSame(Util::isValidIPv6Range($range), $isValid);
-    }
-
-    public function testHash(): void
-    {
-        $hash = Util::hash('hetlaatstelevel', 'sleutel');
-        static::assertSame('f677518b4fe0b8f556fe60131e4244dd9961718d6fbbf219fbd5a98a2412907b', $hash);
     }
 
     #[DataProvider('ipv6AddrToRangeDataProvider')]

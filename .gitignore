@@ -6,3 +6,4 @@ data/.key
 data/allowlist.json
 data/history.log
 data/users.json
+data/config.json

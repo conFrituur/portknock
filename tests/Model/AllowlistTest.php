@@ -55,13 +55,14 @@ class AllowlistTest extends AbstractCase
     public function testUpsert(): void
     {
         $sameEntry   = new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range);
-        $updateEntry = new AllowlistEntry(self::TEST_USER_2, self::IPv4_3, null);
+        $updateEntry = new AllowlistEntry(self::TEST_USER_2, self::IPv4_3, null, self::TEST_AMENDKEY_HASH);
         $newEntry    = new AllowlistEntry('new', null, self::IPv6Range_2);
 
         $expectedAllowlist = new Allowlist([
             new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
             $updateEntry,
-            new AllowlistEntry(self::TEST_USER_3, self::IPv4_2, self::IPv6Range_3),
+            new AllowlistEntry(self::TEST_USER_3, self::IPv4_2, null),
+            new AllowlistEntry(self::TEST_USER_4, null, self::IPv6Range_3, self::TEST_AMENDKEY_HASH_2),
             $newEntry,
         ]);
 

@@ -7,6 +7,7 @@ use Portknock\Helper\OutputHandler;
 use Portknock\Helper\Util;
 use Portknock\Model\HttpHeaders;
 use Portknock\Repository\AllowlistRepository;
+use Portknock\Repository\ConfigRepository;
 use Portknock\Repository\KeyRepository;
 use Portknock\Repository\UserRepository;
 
@@ -15,6 +16,7 @@ abstract class AbstractController
     protected readonly AllowlistRepository $allowlistRepository;
     protected readonly UserRepository $userRepository;
     protected readonly KeyRepository $keyRepository;
+    protected readonly ConfigRepository $configRepository;
     protected readonly OutputHandler $outputHandler;
     protected string $remoteAddr;
 
@@ -23,11 +25,13 @@ abstract class AbstractController
         ?AllowlistRepository $allowlistRepository = null,
         ?UserRepository $userRepository = null,
         ?KeyRepository $keyRepository = null,
+        ?ConfigRepository $configRepository = null,
         ?OutputHandler $outputHandler = null
     ) {
         $this->allowlistRepository = $allowlistRepository ?? new AllowlistRepository();
         $this->userRepository      = $userRepository ?? new UserRepository();
         $this->keyRepository       = $keyRepository ?? new KeyRepository();
+        $this->configRepository    = $configRepository ?? new ConfigRepository();
         $this->outputHandler       = $outputHandler ?? new OutputHandler();
 
         // even if not used in controller itself, it adds requesting ip context to the logs

@@ -3,6 +3,7 @@
 namespace Portknock\Repository;
 
 use Portknock\Helper\Log;
+use Portknock\Helper\Util;
 
 class KeyRepository extends AbstractFileRepository
 {
@@ -13,11 +14,16 @@ class KeyRepository extends AbstractFileRepository
         $key = $this->getOrCreateFile(self::FILE_KEY);
 
         if (!$key) {
-            $key = bin2hex(random_bytes(32));
+            $key = $this->generateRandomKey();
             $this->saveFile(self::FILE_KEY, $key);
             Log::info("New key generated and saved to data/.key file");
         }
 
         return $key;
+    }
+
+    public function generateRandomKey(): string
+    {
+        return Util::generateRandomString(32);
     }
 }

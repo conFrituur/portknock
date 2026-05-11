@@ -4,17 +4,32 @@ namespace Portknock\Controller;
 
 use Portknock\Helper\Log;
 use Portknock\Helper\Util;
+use Portknock\Model\Allowlist;
 use Portknock\Model\AllowlistEntry;
 use Portknock\Model\User;
 use Portknock\Model\UserAccess;
 
 class Knock extends AbstractController
 {
+    private Allowlist $allowlist;
+
     public function knock(): void
     {
-        $user           = $this->getAuthorizedUserFromHeaders();
-        $allowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
-        $this->upsertEntryToAllowlist($allowlistEntry);
+        $user              = $this->getAuthorizedUserFromHeaders();
+        $amendKey          = $this->httpHeaders->getAmendKeyFromQuery();
+        $this->allowlist   = $this->allowlistRepository->getList();
+        $newAllowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
+
+        if ($this->allowlist->hasEntryInList($newAllowlistEntry)) {
+            Log::debug("skipping, {$newAllowlistEntry->getIpAddressAndRangeString()} is already allowlisted");
+            $this->outputHandler->die(200, "Already in allowlist");
+        }
+
+        if (!$amendKey) {
+            $this->firstKnock($newAllowlistEntry);
+        } else {
+            $this->secondKnock($amendKey, $user, $newAllowlistEntry);
+        }
     }
 
     private function getAuthorizedUserFromHeaders(): User
@@ -22,7 +37,7 @@ class Knock extends AbstractController
         $sesamCode = $this->httpHeaders->getSesam();
 
         if (!$sesamCode) {
-            Log::warning("knock request declined, no sesam header found");
+            Log::notice("knock request declined, no sesam header found");
             $this->outputHandler->die(401);
         }
 
@@ -32,14 +47,14 @@ class Knock extends AbstractController
         if (!$user) {
             // Do not log the whole access code, but just the beginning for debug purposes
             $truncatedSesam = substr($sesamCode, 0, 5) . '...';
-            Log::warning("knock request declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
+            Log::notice("knock request declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
             $this->outputHandler->die(401);
         }
 
         Log::addPersistentContext(['username' => $user->getName()]);
 
         if ($user->getUserAccess() !== UserAccess::WRITE_ONLY) {
-            Log::warning("knock request declined, user does not have read permissions");
+            Log::notice("knock request declined, user does not have read permissions");
             $this->outputHandler->die(403);
         }
 
@@ -47,21 +62,114 @@ class Knock extends AbstractController
         return $user;
     }
 
-    private function upsertEntryToAllowlist(AllowlistEntry $allowlistEntry): void
-    {
-        $allowlist = $this->allowlistRepository->getList();
 
-        // Check if IPs are already allowlisted by this user, don't care for duplicates among other users at this point
-        if ($allowlist->hasEntryInList($allowlistEntry)) {
-            Log::debug("skipping, {$allowlistEntry->getIpAddressAndRangeString()} is already allowlisted");
-            $this->outputHandler->echo("200 Already in allowlist");
-            return;
+    private function firstKnock(AllowlistEntry $newAllowlistEntry): void
+    {
+        // Only redirect when not already redirected && shouldRedirect
+        $shouldRedirectForSecondKnock = $this->shouldRedirectForSecondKnock($newAllowlistEntry);
+
+        if ($shouldRedirectForSecondKnock) {
+            $newAmendKey       = $this->keyRepository->generateRandomKey();
+            $newAmendKeyHash   = Util::hash($newAmendKey, $this->keyRepository->getKey());
+            $newAllowlistEntry = $newAllowlistEntry->addAmendKeyHash($newAmendKeyHash);
         }
 
-        $allowlist = $allowlist->upsertEntry($allowlistEntry);
+        $this->upsertEntryToAllowlist($newAllowlistEntry);
 
-        $this->allowlistRepository->save($allowlist);
-        Log::info("{$allowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
+        if ($shouldRedirectForSecondKnock) {
+            /** @var string $redirectUrl */
+            $redirectUrl = $this->getRedirectHostUrl($newAllowlistEntry, $newAmendKey);
+            Log::debug(
+                "Redirected for a second knock to get {$newAllowlistEntry->getMissingDataIpVersion()}",
+                [
+                    "redirect-host"  => parse_url($redirectUrl, PHP_URL_HOST),
+                    'amend-key-hash' => $newAmendKeyHash,
+                ]
+            );
+            $this->outputHandler->redirect($redirectUrl);
+        }
+
         $this->outputHandler->echo("200 Added to allowlist");
+    }
+
+    private function secondKnock(string $amendKey, User $user, AllowlistEntry $newAllowlistEntry): void
+    {
+        $amendKeyHash = Util::hash($amendKey, $this->keyRepository->getKey());
+        Log::addPersistentContext(['amendKeyHash' => $amendKeyHash]);
+        $newAllowlistEntry = $this->amendAllowlistEntry($newAllowlistEntry, $user->getName(), $amendKeyHash);
+
+        $this->upsertEntryToAllowlist($newAllowlistEntry);
+        $this->outputHandler->echo("200 Added to allowlist++");
+    }
+
+    private function upsertEntryToAllowlist(AllowlistEntry $allowlistEntry): void
+    {
+        $this->allowlist = $this->allowlist->upsertEntry($allowlistEntry);
+        $this->allowlistRepository->save($this->allowlist);
+        Log::info("{$allowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
+    }
+
+    private function amendAllowlistEntry(AllowlistEntry $newAllowlistEntry, string $userName, string $amendKeyHash): AllowlistEntry
+    {
+        $previousAllowlistEntry = $this->allowlist->getAllowlistEntryByUserNameAmendKey($userName, $amendKeyHash);
+
+        if (!$previousAllowlistEntry) {
+            Log::notice('second-knock request failed, could not find AllowlistEntry for given user & amendKey');
+            $this->outputHandler->die(403);
+        }
+
+        if ($previousAllowlistEntry->getMissingDataIpVersion() === null) {
+            Log::notice('second-knock request failed, previous AllowlistEntry has no missing information', ['previous-entry' => $previousAllowlistEntry]);
+            $this->outputHandler->die(409, "Nothing to amend");
+        }
+
+        if ($previousAllowlistEntry->getMissingDataIpVersion() === $newAllowlistEntry->getMissingDataIpVersion()) {
+            Log::notice(
+                "second-knock request failed, remote address is not {$newAllowlistEntry->getMissingDataIpVersion()}",
+                ['previous-entry' => $previousAllowlistEntry]
+            );
+            $this->outputHandler->die(409, "Request from same IP version");
+        }
+
+        // First knock takes precedence
+        $ipv4Address = $previousAllowlistEntry->getIpv4Address() ?? $newAllowlistEntry->getIpv4Address();
+        $ipv6Range   = $previousAllowlistEntry->getIpv6Range() ?? $newAllowlistEntry->getIpv6Range();
+
+        return new AllowlistEntry($previousAllowlistEntry->getUserName(), $ipv4Address, $ipv6Range);
+    }
+
+    private function shouldRedirectForSecondKnock(AllowlistEntry $newAllowlistEntry): bool
+    {
+        return
+            $this->httpHeaders->getAmendKeyFromQuery() === null
+            && $this->getRedirectHostUrl($newAllowlistEntry) !== null;
+    }
+
+    private function getRedirectHostUrl(AllowlistEntry $newAllowlistEntry, ?string $amendKey = null): ?string
+    {
+        $ipVersionMissing = $newAllowlistEntry->getMissingDataIpVersion();
+        $config           = $this->configRepository->getConfig();
+        $redirectHost     = null;
+
+        switch ($ipVersionMissing) {
+            case AllowlistEntry::FIELD_IPV4:
+                $redirectHost = $config->getV4RedirectHost();
+                break;
+            case AllowlistEntry::FIELD_IPV6:
+                $redirectHost = $config->getV6RedirectHost();
+                break;
+        }
+
+        if (!$redirectHost) {
+            return null;
+        }
+
+        $redirectHostUrl = "https://$redirectHost{$this->httpHeaders->getRequestUriPath()}";
+
+        if ($amendKey) {
+            $redirectHostUrl .= "?amend={$amendKey}";
+        }
+
+        return $redirectHostUrl;
     }
 }

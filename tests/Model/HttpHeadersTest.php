@@ -11,13 +11,19 @@ class HttpHeadersTest extends AbstractCase
     public function testGetRemoteAddr(): void
     {
         $headers = $this->getTestHeaders();
-        self::assertSame(self::REMOTE_ADDR, $headers->getRemoteAddr());
+        self::assertSame(self::REMOTE_ADDR_IPv6, $headers->getRemoteAddr());
     }
 
     public function testGetSesamHeader(): void
     {
         $headers = $this->getTestHeaders();
         self::assertSame(self::TEST_SESAM, $headers->getSesam());
+    }
+
+    public function testGetAmendKeyFromQuery(): void
+    {
+        $headers = $this->getSecondKnockTestHeaders();
+        self::assertSame(self::TEST_AMENDKEY, $headers->getAmendKeyFromQuery());
     }
 
     #[DataProvider('validateDataProvider')]
@@ -37,7 +43,7 @@ class HttpHeadersTest extends AbstractCase
         $httpHeaders = new HttpHeaders($headers);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('HttpHeader is missing REQUEST_URI or PHP_SELF');
+        $this->expectExceptionMessage('HttpHeader is missing: REQUEST_URI');
         $httpHeaders->getRoutingUri();
     }
 
@@ -48,7 +54,7 @@ class HttpHeadersTest extends AbstractCase
         $httpHeaders = new HttpHeaders($headers);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('HttpHeader is missing REQUEST_URI or PHP_SELF');
+        $this->expectExceptionMessage('HttpHeader is missing: PHP_SELF');
         $httpHeaders->getRoutingUri();
     }
 

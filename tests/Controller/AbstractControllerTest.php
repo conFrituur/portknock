@@ -3,6 +3,7 @@
 namespace Portknock\Tests\Controller;
 
 use Portknock\Model\User;
+use Portknock\Repository\ConfigRepository;
 use Portknock\Tests\Mock\AbstractControllerMock;
 use Portknock\Helper\OutputHandler;
 use Portknock\Model\HttpHeaders;
@@ -18,6 +19,7 @@ class AbstractControllerTest extends AbstractCase
     protected AllowlistRepository $allowlistRepository;
     protected UserRepository $userRepository;
     protected KeyRepository $keyRepository;
+    protected ConfigRepository $configRepository;
     protected OutputHandler $outputHandler;
 
     protected function setUp(): void
@@ -26,6 +28,7 @@ class AbstractControllerTest extends AbstractCase
         $this->allowlistRepository = $this->createMock(AllowlistRepository::class);
         $this->userRepository      = $this->createMock(UserRepository::class);
         $this->keyRepository       = $this->createMock(KeyRepository::class);
+        $this->configRepository    = $this->createMock(ConfigRepository::class);
         $this->outputHandler       = $this->createMock(OutputHandler::class);
         parent::setUp();
     }
@@ -49,7 +52,7 @@ class AbstractControllerTest extends AbstractCase
     {
         $headers                                  = $this->getRawTestHeaders();
         $headers[HttpHeaders::HEADER_REMOTE_ADDR] = 'La-Di-Da-Di';
-        $this->headers = new HttpHeaders($headers);
+        $this->headers                            = new HttpHeaders($headers);
 
         $this->outputHandler->expects($this->once())
             ->method('die')
@@ -78,7 +81,7 @@ class AbstractControllerTest extends AbstractCase
     {
         $headers                            = $this->getRawTestHeaders();
         $headers[HttpHeaders::HEADER_SESAM] = 'La-Di-Da-Di';
-        $this->headers = new HttpHeaders($headers);
+        $this->headers                      = new HttpHeaders($headers);
 
         $this->keyRepository->expects($this->once())
             ->method('getKey')
@@ -117,6 +120,6 @@ class AbstractControllerTest extends AbstractCase
 
     private function constructAbstractControllerMock(): void
     {
-        new AbstractControllerMock($this->headers, $this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
+        new AbstractControllerMock($this->headers, $this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->configRepository, $this->outputHandler);
     }
 }

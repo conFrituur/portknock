@@ -44,4 +44,10 @@ class KeyRepositoryTest extends AbstractCase
         $keyRepository = new KeyRepository($mockFileHandler);
         self::assertSame(64, strlen($keyRepository->getKey()));
     }
+
+    public function testGenerateRandomKey(): void
+    {
+        $keyRepository = new KeyRepository();
+        self::assertSame(64, strlen($keyRepository->generateRandomKey()));
+    }
 }

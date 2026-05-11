@@ -64,6 +64,6 @@ class TableViewTest extends AbstractControllerTest
 
     private function getTableViewController(): TableViewController
     {
-        return new TableViewController($this->headers, $this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->outputHandler);
+        return new TableViewController($this->headers, $this->allowlistRepository, $this->userRepository, $this->keyRepository, $this->configRepository, $this->outputHandler);
     }
 }

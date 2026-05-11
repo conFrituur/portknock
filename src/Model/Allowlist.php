@@ -17,6 +17,14 @@ readonly class Allowlist
         return $this->allowlistEntries;
     }
 
+    public function getAllowlistEntryByUserNameAmendKey(string $userName, string $amendKey): ?AllowlistEntry
+    {
+        return array_find(
+            $this->allowlistEntries,
+            fn (AllowlistEntry $allowlistEntry) => $allowlistEntry->getUserName() === $userName && $allowlistEntry->getAmendKeyHash() === $amendKey
+        );
+    }
+
     public static function fromJson(string $encodedEntries): self
     {
         $jsonData = json_decode($encodedEntries, true, flags: JSON_THROW_ON_ERROR);
@@ -28,7 +36,7 @@ readonly class Allowlist
     {
         $entries = [];
         foreach ($this->allowlistEntries as $allowlistEntry) {
-            $entries[$allowlistEntry->getUserName()] = $allowlistEntry->getIpArray();
+            $entries[$allowlistEntry->getUserName()] = $allowlistEntry->toJsonData();
         }
 
         return json_encode($entries, JSON_THROW_ON_ERROR);
@@ -52,7 +60,7 @@ readonly class Allowlist
     {
         return array_any(
             $this->getAllowlistEntries(),
-            fn (AllowlistEntry $allowlistEntry) => $allowlistEntry->equals($allowlistEntryToCheck)
+            fn (AllowlistEntry $allowlistEntry) => $allowlistEntry->equalsAtLeastOneWithMissingIpVersion($allowlistEntryToCheck)
         );
     }
 
@@ -66,6 +74,7 @@ readonly class Allowlist
             if ($allowlistEntry->getUserName() == $newEntry->getUserName()) {
                 $allowlistEntries[$key] = $newEntry;
                 $updated = true;
+                break;
             }
         }
 

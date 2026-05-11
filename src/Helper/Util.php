@@ -4,10 +4,25 @@ namespace Portknock\Helper;
 
 use IPLib\Range\Subnet;
 use IPLib\Factory;
+use Random\RandomException;
 use RuntimeException;
 
 class Util
 {
+    /**
+     * @param int<1, max> $length
+     * @throws RandomException
+     */
+    public static function generateRandomString(int $length): string
+    {
+        return bin2hex(random_bytes($length));
+    }
+
+    public static function hash(string $data, string $key): string
+    {
+        return hash_hmac('sha256', $data, $key);
+    }
+
     public static function isValidIPv4(string $ip): bool
     {
         $opts = FILTER_FLAG_IPV4 | FILTER_FLAG_NO_RES_RANGE;
@@ -29,11 +44,6 @@ class Util
         }
 
         return false;
-    }
-
-    public static function hash(string $data, string $key): string
-    {
-        return hash_hmac('sha256', $data, $key);
     }
 
     /**

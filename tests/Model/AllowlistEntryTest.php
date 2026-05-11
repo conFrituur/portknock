@@ -20,7 +20,18 @@ class AllowlistEntryTest extends AbstractCase
         new AllowlistEntry($user, $ipv4, $ipv6);
     }
 
-    public function testCreate(): void
+    public function testGetMissingDataIpVersion(): void
+    {
+        $ipv4Only = new AllowlistEntry(self::TEST_USER, self::IPv4, null);
+        $ipv6Only = new AllowlistEntry(self::TEST_USER, null, self::IPv6Range);
+        $both = new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range);
+
+        self::assertSame(AllowlistEntry::FIELD_IPV6, $ipv4Only->getMissingDataIpVersion());
+        self::assertSame(AllowlistEntry::FIELD_IPV4, $ipv6Only->getMissingDataIpVersion());
+        self::assertNull($both->getMissingDataIpVersion());
+    }
+
+    public function testCreateFromAddress(): void
     {
         $ipv4OnlyExpected = new AllowlistEntry(self::TEST_USER, self::IPv4, null);
         $ipv6OnlyExpected = new AllowlistEntry(self::TEST_USER, null, self::IPv6Range);
@@ -35,6 +46,15 @@ class AllowlistEntryTest extends AbstractCase
 
         $this->expectException(DomainException::class);
         AllowlistEntry::createFromAddress(self::TEST_USER, 'lalala');
+    }
+
+    public function testAddAmendKey(): void
+    {
+        $entry   = new AllowlistEntry(self::TEST_USER, self::IPv4, null);
+        self::assertNull($entry->getAmendKeyHash());
+
+        $entry = $entry->addAmendKeyHash(self::TEST_HASH_2);
+        self::assertSame(self::TEST_HASH_2, $entry->getAmendKeyHash());
     }
 
     public function testFromJsonData(): void
@@ -77,10 +97,10 @@ class AllowlistEntryTest extends AbstractCase
         self::assertEquals($bothExpected, $bothActual->getIpAddressAndRangeString());
     }
 
-    #[DataProvider('equalsDataProvider')]
-    public function testEquals(AllowlistEntry $listOne, AllowlistEntry $listTwo, bool $shouldEqual): void
+    #[DataProvider('equalsAtLeastOneWithMissingIpVersionDataProvider')]
+    public function testEqualsAtLeastOneWithMissingIpVersion(AllowlistEntry $listOne, AllowlistEntry $listTwo, bool $shouldEqual): void
     {
-        self::assertSame($shouldEqual, $listOne->equals($listTwo));
+        self::assertSame($shouldEqual, $listOne->equalsAtLeastOneWithMissingIpVersion($listTwo));
     }
 
     public static function validateDataProvider(): array
@@ -97,7 +117,7 @@ class AllowlistEntryTest extends AbstractCase
         ];
     }
 
-    public static function equalsDataProvider(): array
+    public static function equalsAtLeastOneWithMissingIpVersionDataProvider(): array
     {
         return [
             [
@@ -108,6 +128,21 @@ class AllowlistEntryTest extends AbstractCase
             [
                 new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
                 new AllowlistEntry(self::TEST_USER, self::IPv4, null),
+                true,
+            ],
+            [
+                new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
+                new AllowlistEntry(self::TEST_USER, null, self::IPv6Range),
+                true,
+            ],
+            [
+                new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
+                new AllowlistEntry(self::TEST_USER, self::IPv4_2, null),
+                false,
+            ],
+            [
+                new AllowlistEntry(self::TEST_USER, self::IPv4_2, self::IPv6Range_2),
+                new AllowlistEntry(self::TEST_USER, null, self::IPv6Range),
                 false,
             ],
             [
@@ -118,6 +153,11 @@ class AllowlistEntryTest extends AbstractCase
             [
                 new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
                 new AllowlistEntry(self::TEST_USER, self::IPv4_2, self::IPv6Range),
+                false,
+            ],
+            [
+                new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
+                new AllowlistEntry(self::TEST_USER, self::IPv4_2, self::IPv6Range_2),
                 false,
             ],
             [

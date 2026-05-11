@@ -15,16 +15,29 @@ class Knock extends AbstractController
 
     public function knock(): void
     {
+        $amendKeyHash      = $this->getAmendKeyHashFromHeaders();
         $user              = $this->getAuthorizedUserFromHeaders();
-        $amendKey          = $this->httpHeaders->getAmendKeyFromQuery();
         $this->allowlist   = $this->allowlistRepository->getList();
         $newAllowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
 
-        if (!$amendKey) {
+        if (!$amendKeyHash) {
             $this->firstKnock($newAllowlistEntry);
         } else {
-            $this->secondKnock($amendKey, $user, $newAllowlistEntry);
+            $this->secondKnock($amendKeyHash, $user, $newAllowlistEntry);
         }
+    }
+
+    private function getAmendKeyHashFromHeaders(): ?string
+    {
+        $amendKey = $this->httpHeaders->getAmendKeyFromQuery();
+
+        if ($amendKey === null) {
+            return null;
+        }
+
+        $amendKeyHash = Util::hash($amendKey, $this->keyRepository->getKey());
+        Log::addPersistentContext(['amendKeyHash' => $amendKeyHash]);
+        return $amendKeyHash;
     }
 
     private function getAuthorizedUserFromHeaders(): User
@@ -57,7 +70,6 @@ class Knock extends AbstractController
         return $user;
     }
 
-
     private function firstKnock(AllowlistEntry $newAllowlistEntry): void
     {
         if ($this->allowlist->hasEntryInList($newAllowlistEntry)) {
@@ -89,24 +101,23 @@ class Knock extends AbstractController
             $this->outputHandler->redirect($redirectUrl);
         }
 
+        Log::info("first-knock {$newAllowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
         $this->outputHandler->echo("200 Added to allowlist");
     }
 
-    private function secondKnock(string $amendKey, User $user, AllowlistEntry $newAllowlistEntry): void
+    private function secondKnock(string $amendKeyHash, User $user, AllowlistEntry $newAllowlistEntry): void
     {
-        $amendKeyHash = Util::hash($amendKey, $this->keyRepository->getKey());
-        Log::addPersistentContext(['amendKeyHash' => $amendKeyHash]);
-        $newAllowlistEntry = $this->amendAllowlistEntry($newAllowlistEntry, $user->getName(), $amendKeyHash);
+        $mergedAllowlistEntry = $this->amendAllowlistEntry($newAllowlistEntry, $user->getName(), $amendKeyHash);
 
-        $this->upsertEntryToAllowlist($newAllowlistEntry);
+        $this->upsertEntryToAllowlist($mergedAllowlistEntry);
+        Log::info("second-knock {$newAllowlistEntry->getIpAddressAndRangeString()} has been amended to the allowlist");
         $this->outputHandler->echo("200 Added to allowlist++");
     }
 
-    private function upsertEntryToAllowlist(AllowlistEntry $allowlistEntry): void
+    private function upsertEntryToAllowlist(AllowlistEntry $newAllowlistEntry): void
     {
-        $this->allowlist = $this->allowlist->upsertEntry($allowlistEntry);
+        $this->allowlist = $this->allowlist->upsertEntry($newAllowlistEntry);
         $this->allowlistRepository->save($this->allowlist);
-        Log::info("{$allowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
     }
 
     private function amendAllowlistEntry(AllowlistEntry $newAllowlistEntry, string $userName, string $amendKeyHash): AllowlistEntry

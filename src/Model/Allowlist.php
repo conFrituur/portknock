@@ -39,7 +39,7 @@ readonly class Allowlist
             $entries[$allowlistEntry->getUserName()] = $allowlistEntry->toJsonData();
         }
 
-        return json_encode($entries, JSON_THROW_ON_ERROR);
+        return json_encode($entries, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
     }
 
     /**

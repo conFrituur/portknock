@@ -20,11 +20,6 @@ class Knock extends AbstractController
         $this->allowlist   = $this->allowlistRepository->getList();
         $newAllowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
 
-        if ($this->allowlist->hasEntryInList($newAllowlistEntry)) {
-            Log::debug("skipping, {$newAllowlistEntry->getIpAddressAndRangeString()} is already allowlisted");
-            $this->outputHandler->die(200, "Already in allowlist");
-        }
-
         if (!$amendKey) {
             $this->firstKnock($newAllowlistEntry);
         } else {
@@ -65,6 +60,11 @@ class Knock extends AbstractController
 
     private function firstKnock(AllowlistEntry $newAllowlistEntry): void
     {
+        if ($this->allowlist->hasEntryInList($newAllowlistEntry)) {
+            Log::debug("skipping, {$newAllowlistEntry->getIpAddressAndRangeString()} is already allowlisted");
+            $this->outputHandler->die(200, "Already in allowlist");
+        }
+
         // Only redirect when not already redirected && shouldRedirect
         $shouldRedirectForSecondKnock = $this->shouldRedirectForSecondKnock($newAllowlistEntry);
 

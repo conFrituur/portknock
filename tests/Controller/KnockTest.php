@@ -147,7 +147,7 @@ class KnockTest extends AbstractControllerTest
         $this->headers = $this->getSecondKnockTestHeaders();
 
         $allowList = new Allowlist([
-            new AllowlistEntry(self::TEST_USER, self::IPv4, null, self::TEST_AMENDKEY_HASH),
+            new AllowlistEntry(self::TEST_USER, self::REMOTE_ADDR_IPv4, null, self::TEST_AMENDKEY_HASH),
         ]);
 
         $this->prepAbortedKnock($allowList);

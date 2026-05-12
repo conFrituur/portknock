@@ -31,7 +31,7 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock completed, IPv6Range\=\[" . preg_quote(self::REMOTE_ADDR_RANGE, '/') . "\] has been added to the allowlist$/"));
+        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock successful, IPv6Range\=\[" . preg_quote(self::REMOTE_ADDR_RANGE, '/') . "\] has been written to the allowlist$/"));
     }
 
     public function testSuccessfulFirstKnockAgainOverwrite(): void
@@ -60,7 +60,7 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock completed, IPv4\=\[" . self::IPv4 . "\] has been added to the allowlist$/"));
+        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock successful, IPv4\=\[" . self::IPv4 . "\] has been written to the allowlist$/"));
     }
 
     public function testSuccessfulFirstKnockRedirectToSecondKnockToV6(): void
@@ -130,7 +130,11 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist++');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^second-knock completed, IPv4\=\[" . self::REMOTE_ADDR_IPv4 . "\] has been amended to the allowlist$/"));
+        self::assertTrue(
+            $this->logHandler->hasInfoThatMatches(
+                "/^second-knock successful, IPv4\=\[" . self::REMOTE_ADDR_IPv4 . "\] has been amended to " . self::TEST_USER . "'s AllowlistEntry/"
+            )
+        );
     }
 
     public function testSecondKnockKeyNotFound(): void
@@ -183,7 +187,7 @@ class KnockTest extends AbstractControllerTest
 
         $this->outputHandler->expects($this->once())
             ->method('die')
-            ->with(409, 'Request from same IP version')
+            ->with(409, 'Request from same IP version, expected ' . AllowlistEntry::FIELD_IPV6)
             ->will($this->throwException(new MockException('redirect -> die()')));
 
         $this->expectException(MockException::class);
@@ -289,11 +293,10 @@ class KnockTest extends AbstractControllerTest
 
         $this->outputHandler->expects($this->once())
             ->method('die')
-            ->with(200, 'Already in allowlist')
+            ->with(200, 'Already on allowlist')
             ->will($this->throwException(new MockException('redirect -> die()')));
 
         $this->expectException(MockException::class);
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasDebugThatContains("already allowlisted"));
     }
 }

@@ -21,8 +21,10 @@ class Knock extends AbstractController
         $newAllowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
 
         if (!$amendKeyHash) {
+            Log::debug("start processing first-knock request from {$user->getName()}");
             $this->firstKnock($newAllowlistEntry);
         } else {
+            Log::debug("start processing second-knock request from {$user->getName()}");
             $this->secondKnock($amendKeyHash, $user, $newAllowlistEntry);
         }
     }
@@ -66,15 +68,14 @@ class Knock extends AbstractController
             $this->outputHandler->die(403);
         }
 
-        Log::debug("knock request accepted");
         return $user;
     }
 
     private function firstKnock(AllowlistEntry $newAllowlistEntry): void
     {
         if ($this->allowlist->hasEntryInList($newAllowlistEntry)) {
-            Log::debug("skipping, {$newAllowlistEntry->getIpAddressAndRangeString()} is already allowlisted");
-            $this->outputHandler->die(200, "Already in allowlist");
+            Log::debug("skipping, {$newAllowlistEntry->getIpAddressAndRangeString()} is already on allowlist");
+            $this->outputHandler->die(200, "Already on allowlist");
         }
 
         // Only redirect when not already redirected && shouldRedirect
@@ -87,13 +88,13 @@ class Knock extends AbstractController
         }
 
         $this->upsertEntryToAllowlist($newAllowlistEntry);
-        Log::info("first-knock completed, {$newAllowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
+        Log::info("first-knock successful, {$newAllowlistEntry->getIpAddressAndRangeString()} has been written to the allowlist");
 
         if ($shouldRedirectForSecondKnock) {
             /** @var string $redirectUrl */
             $redirectUrl = $this->getRedirectHostUrl($newAllowlistEntry, $newAmendKey);
             Log::debug(
-                "Redirected for a second knock to get {$newAllowlistEntry->getMissingDataIpVersion()}",
+                "Redirected for second-knock to retrieve {$newAllowlistEntry->getMissingDataIpVersion()}",
                 [
                     "redirect-host"  => parse_url($redirectUrl, PHP_URL_HOST),
                     'amend-key-hash' => $newAmendKeyHash,
@@ -110,7 +111,7 @@ class Knock extends AbstractController
         $mergedAllowlistEntry = $this->amendAllowlistEntry($newAllowlistEntry, $user->getName(), $amendKeyHash);
 
         $this->upsertEntryToAllowlist($mergedAllowlistEntry);
-        Log::info("second-knock completed, {$newAllowlistEntry->getIpAddressAndRangeString()} has been amended to the allowlist");
+        Log::info("second-knock successful, {$newAllowlistEntry->getIpAddressAndRangeString()} has been amended to {$user->getName()}'s AllowlistEntry");
         $this->outputHandler->echo("200 Added to allowlist++");
     }
 
@@ -125,21 +126,21 @@ class Knock extends AbstractController
         $previousAllowlistEntry = $this->allowlist->getAllowlistEntryByUserNameAmendKey($userName, $amendKeyHash);
 
         if (!$previousAllowlistEntry) {
-            Log::notice('second-knock request failed, could not find AllowlistEntry for given user & amendKey');
+            Log::notice('second-knock rejected, no AllowlistEntry for provided user && amendKey');
             $this->outputHandler->die(403);
         }
 
         if ($previousAllowlistEntry->getMissingDataIpVersion() === null) {
-            Log::notice('second-knock request failed, previous AllowlistEntry has no missing information', ['previous-entry' => $previousAllowlistEntry]);
+            Log::notice('second-knock rejected, previous AllowlistEntry has no missing IP information', ['previous-entry' => $previousAllowlistEntry]);
             $this->outputHandler->die(409, "Nothing to amend");
         }
 
         if ($previousAllowlistEntry->getMissingDataIpVersion() === $newAllowlistEntry->getMissingDataIpVersion()) {
             Log::notice(
-                "second-knock request failed, remote address is not {$newAllowlistEntry->getMissingDataIpVersion()}",
+                "second-knock failed, remote address is not {$newAllowlistEntry->getMissingDataIpVersion()}",
                 ['previous-entry' => $previousAllowlistEntry]
             );
-            $this->outputHandler->die(409, "Request from same IP version");
+            $this->outputHandler->die(409, "Request from same IP version, expected {$previousAllowlistEntry->getMissingDataIpVersion()}");
         }
 
         // First knock takes precedence

@@ -1,6 +1,6 @@
 # Portknock
 
-[![Build](https://github.com/conFrituur/portknock/actions/workflows/build.yml/badge.svg)](https://github.com/conFrituur/portknock/actions/workflows/build.yml)
+[![Build](https://github.com/conFrituur/portknock/actions/workflows/ci.yml/badge.svg)](https://github.com/conFrituur/portknock/actions/workflows/build.yml)
 [![Coverage](https://raw.githubusercontent.com/conFrituur/portknock/refs/heads/coverage-badge/coverage.svg)](https://github.com/conFrituur/portknock/actions/workflows/build.yml)
 [![php](https://img.shields.io/badge/PHP-8.4-brightgreen?logo=php&style=flat&logoColor=lightgrey)](https://www.php.net/supported-versions.php)
 

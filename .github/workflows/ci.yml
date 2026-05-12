@@ -1,11 +1,11 @@
-name: build
+name: CI
 on:
   push:
     branches: [ "main" ]
 permissions:
   contents: write
 jobs:
-  php-lint-test-cov:
+  lint-test-cov:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -41,7 +41,7 @@ class TableView extends AbstractController
             $this->outputHandler->die(403);
         }
 
-        Log::debug("view request accepted");
+        Log::debug("view request accepted for {$user->getName()}");
     }
 
     private function getAllowedIps(): array

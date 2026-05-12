@@ -17,11 +17,11 @@ readonly class Allowlist
         return $this->allowlistEntries;
     }
 
-    public function getAllowlistEntryByUserNameAmendKey(string $userName, string $amendKey): ?AllowlistEntry
+    public function getAllowlistEntryByUserNameAmendKey(string $userName, string $amendKeyHash): ?AllowlistEntry
     {
         return array_find(
             $this->allowlistEntries,
-            fn (AllowlistEntry $allowlistEntry) => $allowlistEntry->getUserName() === $userName && $allowlistEntry->getAmendKeyHash() === $amendKey
+            fn (AllowlistEntry $allowlistEntry) => $allowlistEntry->getUserName() === $userName && $allowlistEntry->getAmendKeyHash() === $amendKeyHash
         );
     }
 

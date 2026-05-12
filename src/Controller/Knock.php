@@ -21,10 +21,10 @@ class Knock extends AbstractController
         $newAllowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
 
         if (!$amendKeyHash) {
-            Log::debug("start processing first-knock request from {$user->getName()}");
+            Log::debug("processing first-knock request from {$user->getName()}");
             $this->firstKnock($newAllowlistEntry);
         } else {
-            Log::debug("start processing second-knock request from {$user->getName()}");
+            Log::debug("processing second-knock request from {$user->getName()}");
             $this->secondKnock($amendKeyHash, $user, $newAllowlistEntry);
         }
     }
@@ -64,7 +64,7 @@ class Knock extends AbstractController
         Log::addPersistentContext(['username' => $user->getName()]);
 
         if ($user->getUserAccess() !== UserAccess::WRITE_ONLY) {
-            Log::notice("knock request declined, user does not have read permissions");
+            Log::notice("knock request declined, {$user->getName()} does not have read permissions");
             $this->outputHandler->die(403);
         }
 
@@ -88,13 +88,13 @@ class Knock extends AbstractController
         }
 
         $this->upsertEntryToAllowlist($newAllowlistEntry);
-        Log::info("first-knock successful, {$newAllowlistEntry->getIpAddressAndRangeString()} has been written to the allowlist");
+        Log::info("first-knock successful, {$newAllowlistEntry->getIpAddressAndRangeString()} has been written to allowlist");
 
         if ($shouldRedirectForSecondKnock) {
             /** @var string $redirectUrl */
             $redirectUrl = $this->getRedirectHostUrl($newAllowlistEntry, $newAmendKey);
             Log::debug(
-                "Redirected for second-knock to retrieve {$newAllowlistEntry->getMissingDataIpVersion()}",
+                "redirected for second-knock to retrieve {$newAllowlistEntry->getMissingDataIpVersion()}",
                 [
                     "redirect-host"  => parse_url($redirectUrl, PHP_URL_HOST),
                     'amend-key-hash' => $newAmendKeyHash,
@@ -111,7 +111,7 @@ class Knock extends AbstractController
         $mergedAllowlistEntry = $this->amendAllowlistEntry($newAllowlistEntry, $user->getName(), $amendKeyHash);
 
         $this->upsertEntryToAllowlist($mergedAllowlistEntry);
-        Log::info("second-knock successful, {$newAllowlistEntry->getIpAddressAndRangeString()} has been amended to {$user->getName()}'s AllowlistEntry");
+        Log::info("second-knock successful, {$newAllowlistEntry->getIpAddressAndRangeString()} has been amended to {$user->getName()}'s allowlist");
         $this->outputHandler->echo("200 Added to allowlist++");
     }
 
@@ -126,7 +126,7 @@ class Knock extends AbstractController
         $previousAllowlistEntry = $this->allowlist->getAllowlistEntryByUserNameAmendKey($userName, $amendKeyHash);
 
         if (!$previousAllowlistEntry) {
-            Log::notice('second-knock rejected, no AllowlistEntry for provided user && amendKey');
+            Log::notice('second-knock rejected, no entry found for provided user && amendKey');
             $this->outputHandler->die(403);
         }
 

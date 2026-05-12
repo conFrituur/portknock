@@ -8,6 +8,19 @@ use Portknock\Tests\AbstractCase;
 
 class AllowlistTest extends AbstractCase
 {
+    public function testGetAllowlistEntryByUserNameAmendKey()
+    {
+        $allowlist = $this->getTestAllowlist();
+        $allowlistEntry = $allowlist->getAllowlistEntryByUserNameAmendKey(self::TEST_USER_4, self::TEST_AMENDKEY_HASH_2);
+        self::assertSame($allowlist->getAllowlistEntries()[3], $allowlistEntry);
+        $allowlistEntry = $allowlist->getAllowlistEntryByUserNameAmendKey(self::TEST_USER_4, self::TEST_AMENDKEY_HASH);
+        self::assertNull($allowlistEntry);
+        $allowlistEntry = $allowlist->getAllowlistEntryByUserNameAmendKey(self::TEST_USER, self::TEST_AMENDKEY_HASH_2);
+        self::assertNull($allowlistEntry);
+        $allowlistEntry = $allowlist->getAllowlistEntryByUserNameAmendKey(self::TEST_USER, '');
+        self::assertNull($allowlistEntry);
+    }
+    
     public function testImportFromJson(): void
     {
         $expectedAllowlist = $this->getTestAllowlist();

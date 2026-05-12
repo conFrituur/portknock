@@ -31,7 +31,7 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock successful, IPv6Range\=\[" . preg_quote(self::REMOTE_ADDR_RANGE, '/') . "\] has been written to the allowlist$/"));
+        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock successful, IPv6Range\=\[" . preg_quote(self::REMOTE_ADDR_RANGE, '/') . "\] has been written to allowlist$/"));
     }
 
     public function testSuccessfulFirstKnockAgainOverwrite(): void
@@ -60,7 +60,7 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock successful, IPv4\=\[" . self::IPv4 . "\] has been written to the allowlist$/"));
+        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock successful, IPv4\=\[" . self::IPv4 . "\] has been written to allowlist$/"));
     }
 
     public function testSuccessfulFirstKnockRedirectToSecondKnockToV6(): void
@@ -132,28 +132,25 @@ class KnockTest extends AbstractControllerTest
         $this->getKnockController()->knock();
         self::assertTrue(
             $this->logHandler->hasInfoThatMatches(
-                "/^second-knock successful, IPv4\=\[" . self::REMOTE_ADDR_IPv4 . "\] has been amended to " . self::TEST_USER . "'s AllowlistEntry/"
+                "/^second-knock successful, IPv4\=\[" . self::REMOTE_ADDR_IPv4 . "\] has been amended to " . self::TEST_USER . "'s allowlist/"
             )
         );
     }
 
-    public function testSecondKnockKeyNotFound(): void
+    public function testSecondKnockEmptyAmendKey(): void
+    {
+        $headers = $this->getRawSecondKnockTestHeaders();
+        $headers[HttpHeaders::HEADER_QUERY_STRING] = 'amend=';
+        $this->headers                      = new HttpHeaders($headers);
+
+        $this->caseSecondKnockAmendKeyNotFound();
+    }
+
+    public function testSecondKnockAmendKeyNotFound(): void
     {
         $this->headers = $this->getSecondKnockTestHeaders();
 
-        $allowList = new Allowlist([
-            new AllowlistEntry(self::TEST_USER, self::IPv4, self::REMOTE_ADDR_RANGE, self::TEST_AMENDKEY_HASH_2),
-        ]);
-
-        $this->prepAbortedKnock($allowList);
-
-        $this->outputHandler->expects($this->once())
-            ->method('die')
-            ->with(403)
-            ->will($this->throwException(new MockException('redirect -> die()')));
-
-        $this->expectException(MockException::class);
-        $this->getKnockController()->knock();
+        $this->caseSecondKnockAmendKeyNotFound();
     }
 
     public function testSecondKnockNothingToAmend(): void
@@ -294,6 +291,23 @@ class KnockTest extends AbstractControllerTest
         $this->outputHandler->expects($this->once())
             ->method('die')
             ->with(200, 'Already on allowlist')
+            ->will($this->throwException(new MockException('redirect -> die()')));
+
+        $this->expectException(MockException::class);
+        $this->getKnockController()->knock();
+    }
+
+    private function caseSecondKnockAmendKeyNotFound(): void
+    {
+        $allowList = new Allowlist([
+            new AllowlistEntry(self::TEST_USER, self::IPv4, self::REMOTE_ADDR_RANGE, self::TEST_AMENDKEY_HASH_2),
+        ]);
+
+        $this->prepAbortedKnock($allowList);
+
+        $this->outputHandler->expects($this->once())
+            ->method('die')
+            ->with(403)
             ->will($this->throwException(new MockException('redirect -> die()')));
 
         $this->expectException(MockException::class);

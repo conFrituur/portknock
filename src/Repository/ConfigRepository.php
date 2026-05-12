@@ -17,7 +17,7 @@ class ConfigRepository extends AbstractFileRepository
             $configJson   = $this->getOrCreateFile(self::FILE_CONFIG, '[]');
             $jsonData     = json_decode($configJson, true, flags: JSON_THROW_ON_ERROR);
             $this->config = Config::fromJsonData($jsonData);
-            Log::debug("Loaded " . (count($jsonData)) . " config values", ['file' => self::FILE_CONFIG]);
+            Log::debug("loaded " . (count($jsonData)) . " config values", ['file' => self::FILE_CONFIG]);
         }
         return $this->config;
     }

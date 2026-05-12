@@ -17,6 +17,8 @@ class UserTest extends AbstractCase
         );
 
         self::assertEquals($expectedUser, $actualUser);
+        self::assertSame(self::TEST_USER, $actualUser->getName());
+        self::assertSame(UserAccess::READ_ONLY, $actualUser->getUserAccess());
     }
 
     public function testErrorFromInvalidJsonData(): void

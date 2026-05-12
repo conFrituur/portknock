@@ -87,6 +87,7 @@ class UtilTest extends AbstractCase
             ['fe80::1ff:fe23:4567:890a', false],
             ['fe80::1', false],
             ['fd0d::1', true],
+            ['fd00:dead:beef::1', true],
             ['80.69.69.100', false],
             ['80.69.69.0/24', false],
             ['uhr3287fewjkb3r28y9', false],

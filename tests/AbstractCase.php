@@ -102,6 +102,6 @@ abstract class AbstractCase extends TestCase
             self::TEST_USER_2 => [AllowlistEntry::FIELD_IPV4 => self::IPv4_2, AllowlistEntry::FIELD_IPV6 => self::IPv6Range_2],
             self::TEST_USER_3 => [AllowlistEntry::FIELD_IPV4 => self::IPv4_2],
             self::TEST_USER_4 => [AllowlistEntry::FIELD_IPV6 => self::IPv6Range_3, AllowlistEntry::FIELD_AMENDKEY => self::TEST_AMENDKEY_HASH_2],
-        ]);
+        ], JSON_PRETTY_PRINT);
     }
 }

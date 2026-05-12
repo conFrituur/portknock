@@ -87,6 +87,7 @@ class Knock extends AbstractController
         }
 
         $this->upsertEntryToAllowlist($newAllowlistEntry);
+        Log::info("first-knock completed, {$newAllowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
 
         if ($shouldRedirectForSecondKnock) {
             /** @var string $redirectUrl */
@@ -101,7 +102,6 @@ class Knock extends AbstractController
             $this->outputHandler->redirect($redirectUrl);
         }
 
-        Log::info("first-knock {$newAllowlistEntry->getIpAddressAndRangeString()} has been added to the allowlist");
         $this->outputHandler->echo("200 Added to allowlist");
     }
 
@@ -110,7 +110,7 @@ class Knock extends AbstractController
         $mergedAllowlistEntry = $this->amendAllowlistEntry($newAllowlistEntry, $user->getName(), $amendKeyHash);
 
         $this->upsertEntryToAllowlist($mergedAllowlistEntry);
-        Log::info("second-knock {$newAllowlistEntry->getIpAddressAndRangeString()} has been amended to the allowlist");
+        Log::info("second-knock completed, {$newAllowlistEntry->getIpAddressAndRangeString()} has been amended to the allowlist");
         $this->outputHandler->echo("200 Added to allowlist++");
     }
 

@@ -31,7 +31,7 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock IPv6Range\=\[" . preg_quote(self::REMOTE_ADDR_RANGE, '/') ."\] has been added to the allowlist$/"));
+        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock completed, IPv6Range\=\[" . preg_quote(self::REMOTE_ADDR_RANGE, '/') . "\] has been added to the allowlist$/"));
     }
 
     public function testSuccessfulFirstKnockAgainOverwrite(): void
@@ -40,7 +40,7 @@ class KnockTest extends AbstractControllerTest
         $headers[HttpHeaders::HEADER_REMOTE_ADDR] = self::IPv4;
         $this->headers                            = new HttpHeaders($headers);
 
-        $previousAllowlist =new Allowlist([
+        $previousAllowlist = new Allowlist([
             new AllowlistEntry(self::TEST_USER, null, self::REMOTE_ADDR_RANGE, self::TEST_AMENDKEY_HASH),
         ]);
 
@@ -60,7 +60,7 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock IPv4\=\[" . self::IPv4 ."\] has been added to the allowlist$/"));
+        self::assertTrue($this->logHandler->hasInfoThatMatches("/^first-knock completed, IPv4\=\[" . self::IPv4 . "\] has been added to the allowlist$/"));
     }
 
     public function testSuccessfulFirstKnockRedirectToSecondKnockToV6(): void
@@ -130,7 +130,7 @@ class KnockTest extends AbstractControllerTest
             ->with('200 Added to allowlist++');
 
         $this->getKnockController()->knock();
-        self::assertTrue($this->logHandler->hasInfoThatMatches("/^second-knock IPv4\=\[" . self::REMOTE_ADDR_IPv4 ."\] has been amended to the allowlist$/"));
+        self::assertTrue($this->logHandler->hasInfoThatMatches("/^second-knock completed, IPv4\=\[" . self::REMOTE_ADDR_IPv4 . "\] has been amended to the allowlist$/"));
     }
 
     public function testSecondKnockKeyNotFound(): void

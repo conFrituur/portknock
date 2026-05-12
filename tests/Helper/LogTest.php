@@ -3,6 +3,7 @@
 namespace Portknock\Tests\Helper;
 
 use Monolog\Handler\NoopHandler;
+use Monolog\Level;
 use Monolog\Logger;
 use Portknock\Helper\Log;
 use Portknock\Tests\AbstractCase;
@@ -28,5 +29,25 @@ class LogTest extends AbstractCase
         static::assertTrue($this->logHandler->hasWarningThatContains($message));
         static::assertTrue($this->logHandler->hasErrorThatContains($message));
         static::assertTrue($this->logHandler->hasCriticalThatContains($message));
+    }
+
+    public function testGetLogLevelFromEnvironment(): void
+    {
+        putenv("LOG_LEVEL=Debug");
+        $expectedLevel = Level::Debug;
+        self::assertSame($expectedLevel, Log::getLogLevelFromEnvironment());
+    }
+
+    public function testGetLogLevelFromEnvironmentDefaultInfo(): void
+    {
+        $expectedLevel = Level::Info;
+        self::assertSame($expectedLevel, Log::getLogLevelFromEnvironment());
+    }
+
+    public function testGetLogLevelFromEnvironmentUnknown(): void
+    {
+        putenv("LOG_LEVEL=Lol");
+        $expectedLevel = Level::Info;
+        self::assertSame($expectedLevel, Log::getLogLevelFromEnvironment());
     }
 }

@@ -49,6 +49,7 @@ abstract class AbstractCase extends TestCase
 
     protected function setUp(): void
     {
+        putenv('LOG_LEVEL'); // unset the env level from potential earlier tests
         $this->logHandler = new TestHandler();
         $log              = new Logger(__CLASS__, [$this->logHandler]);
         Log::setLogger($log);

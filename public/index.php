@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Monolog\ErrorHandler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
-use Monolog\Level;
 use Monolog\Logger;
 use Portknock\Controller\Knock as KnockController;
 use Portknock\Controller\TableView as TableViewController;
@@ -22,7 +21,7 @@ $output = "[%datetime%] %level_name%: %message% %context%" . PHP_EOL;
 $formatter = new LineFormatter($output, $dateFormat);
 
 $logger = new Logger("PortknockLog");
-$steamHandler = new StreamHandler(__DIR__ . '/../data/history.log', Level::Debug);
+$steamHandler = new StreamHandler(__DIR__ . '/../data/history.log', Log::getLogLevelFromEnvironment());
 $steamHandler->setFormatter($formatter);
 
 $logger->pushHandler($steamHandler);

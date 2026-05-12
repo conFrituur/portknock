@@ -2,7 +2,9 @@
 
 namespace Portknock\Helper;
 
+use Monolog\Level;
 use Psr\Log\LoggerInterface;
+use UnhandledMatchError;
 
 class Log
 {
@@ -12,6 +14,18 @@ class Log
     private static array $loggers = [];
 
     private static array $persistentContext = [];
+
+    public static function getLogLevelFromEnvironment(): Level
+    {
+        $levelName = strtolower(strval(getenv('LOG_LEVEL')));
+        try {
+            // @phpstan-ignore-next-line
+            $level = Level::fromName($levelName);
+        } catch (UnhandledMatchError) {
+            $level =  Level::Info;
+        }
+        return $level;
+    }
 
     public static function setLogger(LoggerInterface $logger): void
     {

@@ -20,7 +20,7 @@ class AllowlistTest extends AbstractCase
         $allowlistEntry = $allowlist->getAllowlistEntryByUserNameAmendKey(self::TEST_USER, '');
         self::assertNull($allowlistEntry);
     }
-    
+
     public function testImportFromJson(): void
     {
         $expectedAllowlist = $this->getTestAllowlist();

@@ -15,7 +15,7 @@ use Portknock\Model\HttpHeaders;
 
 require '../vendor/autoload.php';
 
-header('Content-Type: text/plain; charset=utf-8');
+header('Content-Type: text/plain; charset=UTF-8');
 $headers = new HttpHeaders($_SERVER);
 
 $dateFormat = "Y-m-d H:i:s";

@@ -6,6 +6,8 @@ use Portknock\Helper\Log;
 use Portknock\Helper\OutputHandler;
 use Portknock\Helper\Util;
 use Portknock\Model\HttpHeaders;
+use Portknock\Model\User;
+use Portknock\Model\UserAccess;
 use Portknock\Repository\AllowlistRepository;
 use Portknock\Repository\ConfigRepository;
 use Portknock\Repository\KeyRepository;
@@ -36,6 +38,35 @@ abstract class AbstractController
 
         // even if not used in controller itself, it adds requesting ip context to the logs
         $this->parseAndValidateRemoteIpFromHeaders();
+    }
+
+    protected function getAndCheckAuthorizedUserFromHeaders(string $requestType, UserAccess $userAccess): User
+    {
+        $sesamCode = $this->httpHeaders->getSesam();
+
+        if (!$sesamCode) {
+            Log::notice("{$requestType} declined, no sesam header found");
+            $this->outputHandler->die(401);
+        }
+
+        $authHash = Util::hash($sesamCode, $this->keyRepository->getKey());
+        $user     = $this->userRepository->getUserByAuthHash($authHash);
+
+        if (!$user) {
+            // Do not log the whole access code, but just the beginning for debug purposes
+            $truncatedSesam = substr($sesamCode, 0, 5) . '...';
+            Log::notice("{$requestType} declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
+            $this->outputHandler->die(401);
+        }
+
+        Log::addPersistentContext(['username' => $user->getName()]);
+
+        if ($user->getUserAccess() !== $userAccess) {
+            Log::notice("{$requestType} declined, {$user->getName()} does not have {$userAccess->value} permissions");
+            $this->outputHandler->die(403);
+        }
+
+        return $user;
     }
 
     private function parseAndValidateRemoteIpFromHeaders(): void

@@ -3,45 +3,16 @@
 namespace Portknock\Controller;
 
 use Portknock\Helper\Log;
-use Portknock\Helper\Util;
 use Portknock\Model\UserAccess;
 
 class TableView extends AbstractController
 {
     public function showList(): void
     {
-        $this->checkAuthorizedUserFromHeaders();
+        $user = $this->getAndCheckAuthorizedUserFromHeaders('view', UserAccess::READ_ONLY);
+        Log::debug("view request accepted for {$user->getName()}");
         $allowedIps = $this->getAllowedIps();
         $this->outputHandler->echo($this->buildOPNsenseTable($allowedIps));
-    }
-
-    private function checkAuthorizedUserFromHeaders(): void
-    {
-        $sesamCode = $this->httpHeaders->getSesam();
-
-        if (!$sesamCode) {
-            Log::warning("view request declined, no sesam header found");
-            $this->outputHandler->die(401);
-        }
-
-        $authHash = Util::hash($sesamCode, $this->keyRepository->getKey());
-        $user     = $this->userRepository->getUserByAuthHash($authHash);
-
-        if (!$user) {
-            // Do not log the whole access code, but just the beginning for debug purposes
-            $truncatedSesam = substr($sesamCode, 0, 5) . '...';
-            Log::warning("view request declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
-            $this->outputHandler->die(401);
-        }
-
-        Log::addPersistentContext(['username' => $user->getName()]);
-
-        if ($user->getUserAccess() !== UserAccess::READ_ONLY) {
-            Log::warning("view request declined, user does not have read permissions");
-            $this->outputHandler->die(403);
-        }
-
-        Log::debug("view request accepted for {$user->getName()}");
     }
 
     private function getAllowedIps(): array

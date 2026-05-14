@@ -179,4 +179,18 @@ readonly class AllowlistEntry
         return $this->getIpv4Address() === $other->getIpv4Address()
             && $this->getIpv6Range() === $other->getIpv6Range();
     }
+
+    public function hasIpAddressInEntry(string $ipToCheck): bool
+    {
+        if (Util::isValidIPv6($ipToCheck)) {
+            $ipv6RangeToCheck = Util::getRangeForIpv6Address($ipToCheck);
+            return $this->getIpv6Range() === $ipv6RangeToCheck;
+        }
+
+        if (!Util::isValidIPv4($ipToCheck)) {
+            throw new \RuntimeException($ipToCheck . ' is not a valid address');
+        }
+
+        return $this->getIpv4Address() === $ipToCheck;
+    }
 }

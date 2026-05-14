@@ -6,6 +6,7 @@ use Monolog\ErrorHandler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Portknock\Controller\CheckView as CheckView;
 use Portknock\Controller\Knock as KnockController;
 use Portknock\Controller\TableView as TableViewController;
 use Portknock\Helper\Log;
@@ -34,6 +35,9 @@ switch ($headers->getRoutingUri()) {
         break;
     case 'view':
         new TableViewController($headers)->showList();
+        break;
+    case 'check':
+        new CheckView($headers)->isIpOnAllowlist();
         break;
     default:
         new OutputHandler()->die(404);

@@ -16,7 +16,7 @@ class Knock extends AbstractController
     public function knock(): void
     {
         $amendKeyHash      = $this->getAmendKeyHashFromHeaders();
-        $user              = $this->getAuthorizedUserFromHeaders();
+        $user              = $this->getAndCheckAuthorizedUserFromHeaders('knock request', UserAccess::WRITE_ONLY);
         $this->allowlist   = $this->allowlistRepository->getList();
         $newAllowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
 
@@ -42,34 +42,7 @@ class Knock extends AbstractController
         return $amendKeyHash;
     }
 
-    private function getAuthorizedUserFromHeaders(): User
-    {
-        $sesamCode = $this->httpHeaders->getSesam();
 
-        if (!$sesamCode) {
-            Log::notice("knock request declined, no sesam header found");
-            $this->outputHandler->die(401);
-        }
-
-        $authHash = Util::hash($sesamCode, $this->keyRepository->getKey());
-        $user     = $this->userRepository->getUserByAuthHash($authHash);
-
-        if (!$user) {
-            // Do not log the whole access code, but just the beginning for debug purposes
-            $truncatedSesam = substr($sesamCode, 0, 5) . '...';
-            Log::notice("knock request declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
-            $this->outputHandler->die(401);
-        }
-
-        Log::addPersistentContext(['username' => $user->getName()]);
-
-        if ($user->getUserAccess() !== UserAccess::WRITE_ONLY) {
-            Log::notice("knock request declined, {$user->getName()} does not have read permissions");
-            $this->outputHandler->die(403);
-        }
-
-        return $user;
-    }
 
     private function firstKnock(AllowlistEntry $newAllowlistEntry): void
     {

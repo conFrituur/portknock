@@ -64,6 +64,14 @@ readonly class Allowlist
         );
     }
 
+    public function hasIpAddressInList(string $ipToCheck): bool
+    {
+        return array_any(
+            $this->getAllowlistEntries(),
+            fn (AllowlistEntry $allowlistEntry) => $allowlistEntry->hasIpAddressInEntry($ipToCheck)
+        );
+    }
+
     public function upsertEntry(AllowlistEntry $newEntry): self
     {
         $allowlistEntries = $this->allowlistEntries;

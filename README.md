@@ -66,6 +66,7 @@ server {
       location ~ \.php$ {
         include fastcgi.conf;
         fastcgi_param SCRIPT_FILENAME /var/www/portknock.example.nl/knock/public/index.php;
+        fastcgi_param LOG_LEVEL debug; # can omit, default level = info
         fastcgi_index index.php;
         fastcgi_pass unix:/run/php/php8.4-fpm.sock;
       }

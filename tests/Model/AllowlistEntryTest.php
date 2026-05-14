@@ -103,6 +103,20 @@ class AllowlistEntryTest extends AbstractCase
         self::assertSame($shouldEqual, $listOne->equalsAtLeastOneWithMissingIpVersion($listTwo));
     }
 
+    #[DataProvider('hasIpAddressInEntryProvider')]
+    public function testHasIpAddressInEntry(string $ipAddress, bool $shouldBeInList): void
+    {
+        $allowlist = $this->getTestAllowlist();
+        self::assertSame($shouldBeInList, $allowlist->hasIpAddressInList($ipAddress));
+    }
+
+    public function testHasIpAddressInEntryInvalid(): void
+    {
+        $allowlist = $this->getTestAllowlist();
+        $this->expectException(\RuntimeException::class);
+        $allowlist->hasIpAddressInList(self::IPv6Range);
+    }
+
     public static function validateDataProvider(): array
     {
         return [
@@ -163,6 +177,28 @@ class AllowlistEntryTest extends AbstractCase
             [
                 new AllowlistEntry(self::TEST_USER, self::IPv4, self::IPv6Range),
                 new AllowlistEntry(self::TEST_USER_2, self::IPv4, self::IPv6Range),
+                false,
+            ],
+        ];
+    }
+
+    public static function hasIpAddressInEntryProvider(): array
+    {
+        return [
+            [
+                self::IPv4,
+                true,
+            ],
+            [
+                self::IPv6,
+                true,
+            ],
+            [
+                'a9b1:4147:0208:b021:370b:be88:7912:da7d',
+                false,
+            ],
+            [
+                self::IPv4_3,
                 false,
             ],
         ];

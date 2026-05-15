@@ -45,7 +45,7 @@ abstract class AbstractController
         $sesamCode = $this->httpHeaders->getSesam();
 
         if (!$sesamCode) {
-            Log::notice("{$requestType} declined, no sesam header found");
+            Log::notice("{$requestType} request declined, no sesam header found");
             $this->outputHandler->die(401);
         }
 
@@ -55,14 +55,14 @@ abstract class AbstractController
         if (!$user) {
             // Do not log the whole access code, but just the beginning for debug purposes
             $truncatedSesam = substr($sesamCode, 0, 5) . '...';
-            Log::notice("{$requestType} declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
+            Log::notice("{$requestType} request declined, no user found for sesam", ["truncated-header" => $truncatedSesam]);
             $this->outputHandler->die(401);
         }
 
         Log::addPersistentContext(['username' => $user->getName()]);
 
         if ($user->getUserAccess() !== $userAccess) {
-            Log::notice("{$requestType} declined, {$user->getName()} does not have {$userAccess->value} permissions");
+            Log::notice("{$requestType} request declined, {$user->getName()} does not have {$userAccess->value} permissions");
             $this->outputHandler->die(403);
         }
 

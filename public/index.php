@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Monolog\ErrorHandler;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\StreamHandler;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use Portknock\Controller\CheckView as CheckView;
 use Portknock\Controller\Knock as KnockController;
@@ -23,7 +23,7 @@ $output = "[%datetime%] %level_name%: %message% %context%" . PHP_EOL;
 $formatter = new LineFormatter($output, $dateFormat);
 
 $logger = new Logger("PortknockLog");
-$steamHandler = new StreamHandler(__DIR__ . '/../data/history.log', Log::getLogLevelFromEnvironment());
+$steamHandler = new RotatingFileHandler(__DIR__ . '/../data/history.log', 3, Log::getLogLevelFromEnvironment(), dateFormat: RotatingFileHandler::FILE_PER_MONTH);
 $steamHandler->setFormatter($formatter);
 
 $logger->pushHandler($steamHandler);

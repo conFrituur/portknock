@@ -16,7 +16,7 @@ class Knock extends AbstractController
     public function knock(): void
     {
         $amendKeyHash      = $this->getAmendKeyHashFromHeaders();
-        $user              = $this->getAndCheckAuthorizedUserFromHeaders('knock request', UserAccess::WRITE_ONLY);
+        $user              = $this->getAndCheckAuthorizedUserFromHeaders('knock', UserAccess::WRITE_ONLY);
         $this->allowlist   = $this->allowlistRepository->getList();
         $newAllowlistEntry = AllowlistEntry::createFromAddress($user->getName(), $this->remoteAddr);
 

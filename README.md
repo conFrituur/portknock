@@ -1,7 +1,7 @@
 # Portknock
 
-[![Build](https://github.com/conFrituur/portknock/actions/workflows/ci.yml/badge.svg)](https://github.com/conFrituur/portknock/actions/workflows/build.yml)
-[![Coverage](https://raw.githubusercontent.com/conFrituur/portknock/refs/heads/coverage-badge/coverage.svg)](https://github.com/conFrituur/portknock/actions/workflows/build.yml)
+[![Build](https://github.com/conFrituur/portknock/actions/workflows/ci.yml/badge.svg)](https://github.com/conFrituur/portknock/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FconFrituur%2Fportknock%2Frefs%2Fheads%2Fcoverage-badge%2Foutput.txt&search=Lines%3A%5Cs%2B(%5Cd%2B%5C.%5Cd%2B%25)&replace=%241&style=flat&label=Coverage)](https://github.com/conFrituur/portknock/actions/workflows/ci.yml)
 [![php](https://img.shields.io/badge/PHP-^8.4-brightgreen?logo=php&style=flat&logoColor=lightgrey)](https://www.php.net/supported-versions.php)
 
 This application provides an authenticated way of externally opening my OPNsense firewall to a remote IP. Performing a 'knock', similar to [Portknocking](https://en.wikipedia.org/wiki/Port_knocking), will allowlist the IPv4 and IPv6Range of the originating network. 
@@ -81,9 +81,9 @@ Example URLs:
 ### Webserver 
 
 - Expose the `Public` folder only!
-- Combine the v4/v6 hosts to all go to the same config
+- Combine the v4/v6 hosts to all go to the same root directory
 
-NGINX example config:
+### NGINX example config:
 ```
 server {
     listen 443 ssl;

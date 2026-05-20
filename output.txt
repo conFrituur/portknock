@@ -1,0 +1,42 @@
+
+
+Code Coverage Report:
+  2026-05-20 10:53:59
+
+ Summary:
+  Classes: 88.89% (16/18)
+  Methods: 93.41% (85/91)
+  Lines:   97.48% (348/357)
+
+Portknock\Controller\AbstractController
+  Methods: 100.00% ( 3/ 3)   Lines: 100.00% ( 30/ 30)
+Portknock\Controller\CheckView
+  Methods: 100.00% ( 2/ 2)   Lines: 100.00% ( 15/ 15)
+Portknock\Controller\Knock
+  Methods: 100.00% ( 8/ 8)   Lines: 100.00% ( 74/ 74)
+Portknock\Controller\TableView
+  Methods: 100.00% ( 3/ 3)   Lines: 100.00% (  7/  7)
+Portknock\Helper\Log
+  Methods: 100.00% (13/13)   Lines: 100.00% ( 23/ 23)
+Portknock\Helper\Util
+  Methods: 100.00% ( 6/ 6)   Lines: 100.00% ( 14/ 14)
+Portknock\Model\Allowlist
+  Methods: 100.00% ( 9/ 9)   Lines: 100.00% ( 36/ 36)
+Portknock\Model\AllowlistEntry
+  Methods: 100.00% (15/15)   Lines: 100.00% ( 66/ 66)
+Portknock\Model\Config
+  Methods: 100.00% ( 4/ 4)   Lines: 100.00% (  7/  7)
+Portknock\Model\HttpHeaders
+  Methods: 100.00% ( 8/ 8)   Lines: 100.00% ( 27/ 27)
+Portknock\Model\User
+  Methods: 100.00% ( 4/ 4)   Lines: 100.00% ( 10/ 10)
+Portknock\Repository\AbstractFileRepository
+  Methods: 100.00% ( 4/ 4)   Lines: 100.00% ( 14/ 14)
+Portknock\Repository\AllowlistRepository
+  Methods: 100.00% ( 2/ 2)   Lines: 100.00% (  7/  7)
+Portknock\Repository\ConfigRepository
+  Methods: 100.00% ( 1/ 1)   Lines: 100.00% (  6/  6)
+Portknock\Repository\KeyRepository
+  Methods: 100.00% ( 2/ 2)   Lines: 100.00% (  7/  7)
+Portknock\Repository\UserRepository
+  Methods: 100.00% ( 1/ 1)   Lines: 100.00% (  5/  5)

@@ -29,17 +29,11 @@ jobs:
       - name: Run PHPStan
         run: composer exec "phpstan --no-interaction --ansi --no-progress analyse"
 
-      - name: Run PHPUnit
-        run: composer exec "phpunit --no-progress --coverage-clover=clover.xml"
-
       - name: Creating coverage folder
         run: mkdir -p coverage
 
-      - name: Make code coverage badge
-        uses: timkrase/phpunit-coverage-badge@v1.2.1
-        with:
-          coverage_badge_path: coverage/coverage.svg
-          push_badge: false
+      - name: Run PHPUnit
+        run: composer exec "phpunit --no-progress --coverage-text=coverage/output.txt"
 
       - name: Publish coverage report to coverage-badge branch
         uses: JamesIves/github-pages-deploy-action@v4

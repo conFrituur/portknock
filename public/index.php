@@ -34,7 +34,7 @@ switch ($headers->getRoutingUri()) {
     case '':
         new KnockController($headers)->knock();
         break;
-    case 'view':
+    case 'list':
         new TableViewController($headers)->showList();
         break;
     case 'check':
